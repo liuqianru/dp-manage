@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.sys.dao.SysDictDao">
+
+    <select id="queryByCode" resultType="com.platform.modules.sys.entity.SysDictEntity">
+        SELECT * FROM SYS_DICT WHERE 1=1
+            AND GROUP_ID = (SELECT ID FROM SYS_DICT_GROUP WHERE CODE = #{code})
+            AND STATUS = 1 ORDER BY SORT
+    </select>
+
+    <select id="queryVNByCode" resultType="com.platform.modules.sys.entity.SysDictEntity">
+        SELECT A.value value1,B.value value2,C.value value3,A.name name1,B.name name2,C.name name3 FROM SYS_DICT A
+        LEFT JOIN SYS_DICT B ON (A.id=B.parentId)
+        LEFT JOIN SYS_DICT C ON (B.id=C.parentId)
+        WHERE A.STATUS = 1 AND A.GROUP_ID = (SELECT ID FROM SYS_DICT_GROUP WHERE CODE = #{code}) ORDER BY A.SORT, B.SORT, C.SORT
+    </select>
+
+    <sql id="selectSql">
+        SELECT D.*,G.CODE CODE FROM SYS_DICT D LEFT JOIN SYS_DICT_GROUP G ON D.GROUP_ID = G.ID
+        WHERE 1=1
+        <if test="params.name != null and params.name != ''">
+            and D.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.code != null and params.code != ''">
+            and G.CODE = #{params.code}
+        </if>
+        <if test="params.selectPt != null and params.selectPt != ''">
+            and G.CODE in ('IDENTITYGROUP','IDENTITYLEVEL','AREAONE','AREATWO','AREATHREE','GROUPORG','NATION')
+        </if>
+        <if test="params.status != null">
+            and D.STATUS = #{params.status}
+        </if>
+    </sql>
+
+    <select id="selectDictPage" resultType="com.platform.modules.sys.entity.SysDictEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.sys.entity.SysDictEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

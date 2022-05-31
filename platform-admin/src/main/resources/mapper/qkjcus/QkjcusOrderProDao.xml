@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjcus.dao.QkjcusOrderProDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,o.id instockid,o.*,w.proname,h.HouseName,w.wareid
+        FROM QKJCUS_ORDER_PRO T
+        join qkjcus_order o on (T.mainid=o.id)
+        left join qkjvip_order_warepro w on (t.wareproid=w.id)
+        join qkjvip_order_warehouse h on (h.Id=w.wareid)
+        WHERE 1=1
+        <if test="params.wareproid != null and params.wareproid.trim() != ''">
+            AND T.wareproid = '${params.wareproid}'
+        </if>
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainid = '${params.mainid}'
+        </if>
+    </sql>
+
+    <select id="selectQkjcusOrderProPage" resultType="com.platform.modules.qkjcus.entity.QkjcusOrderProEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjcus.entity.QkjcusOrderProEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderOrderdetailDao">
+
+    <sql id="selectSql">
+        SELECT b.MemberName,a.WareHouseId,a.housename,t.* from QKJVIP_ORDER_ORDERDETAIL t
+        join qkjvip_order_order b on (t.morderId=b.id)
+        join qkjvip_product_stock a on (a.orderid=b.id)
+        where b.Disabled=0 and t.disabled=0
+        <if test="params.ordertype != null">
+            AND b.OrderType = #{params.ordertype}
+        </if>
+        <if test="params.noorderstatus != null">
+            AND b.OrderStatus != #{params.noorderstatus}
+        </if>
+        <if test="params.warehouseid != null and params.warehouseid.trim() != '' and params.productid != null and params.productid.trim() != ''">
+            and a.WareHouseId=#{params.warehouseid} and t.ProductId = #{params.productid}
+            and not EXISTS ( SELECT 1 from qkjvip_order_deliverlog rlog
+            where rlog.OrderId=t.morderId and rlog.WareHouseId=#{params.warehouseid})
+        </if>
+    </sql>
+
+    <select id="selectQkjvipOrderOrderdetailPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderOrderdetailEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderOrderdetailEntity">
+        <include refid="selectSql"/>
+    </select>
+    <delete id="deleteBatchByOrder">
+        DELETE FROM QKJVIP_ORDER_ORDERDETAIL WHERE MOrderId = #{morderid}
+    </delete>
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrts.dao.QkjrtsWelfareOtherobjectsDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,w.Title,w.CreateUser,w.CreateTime
+        FROM QKJRTS_WELFARE_OTHEROBJECTS T
+        LEFT JOIN qkjrts_welfare w ON (T.mainid = w.id)
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainid = #{params.mainid}
+        </if>
+        <if test="params.title != null and params.title.trim() != ''">
+            AND w.Title LIKE '%${params.title}%'
+        </if>
+        <if test="params.objecttype != null">
+            AND T.objecttype = #{params.objecttype}
+        </if>
+        <!--核心店、团购商权限-->
+        <if test="params.listorgno != null and params.listorgno.trim() != ''">
+            AND T.distributerid in
+            <foreach item="orgno" collection="params.listorgno.split(',')" open="(" separator="," close=")">
+                #{orgno}
+            </foreach>
+        </if>
+        <!--内部管理员权限-->
+        <if test="params.currentuserid != null and params.currentuserid.trim() != ''">
+            AND T.UserId = #{params.currentuserid}
+        </if>
+    </sql>
+
+    <select id="selectQkjrtsWelfareOtherobjectsPage" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareOtherobjectsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareOtherobjectsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteByMainId">
+        DELETE FROM QKJRTS_WELFARE_OTHEROBJECTS
+        WHERE mainid = #{value}
+    </delete>
+</mapper>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.MemberAddressDao">
+	<sql id="selectSql">
+		SELECT ma.* FROM qkjvip_member_address ma
+		WHERE 1=1
+		<if test="params.uuid != null and params.uuid != ''">
+			AND ma.uuid = #{params.uuid}
+		</if>
+		<if test="params.memberId != null and params.memberId != ''">
+			AND ma.member_id = #{params.memberId}
+		</if>
+	</sql>
+	<select id="selectMemberAddrList" resultType="com.platform.modules.qkjvip.entity.MemberAddressEntity">
+		<include refid="selectSql"/>
+	</select>
+	<select id="queryAll" resultType="com.platform.modules.qkjvip.entity.MemberAddressEntity">
+		<include refid="selectSql"/>
+	</select>
+	<update id="updateByMemberId" parameterType="string">
+		update qkjvip_member_address
+		set default_address = 0
+		where member_id = #{value}
+	</update>
+	<delete id="deleteByMemberId">
+        DELETE FROM qkjvip_member_address WHERE member_id = #{value}
+    </delete>
+</mapper>

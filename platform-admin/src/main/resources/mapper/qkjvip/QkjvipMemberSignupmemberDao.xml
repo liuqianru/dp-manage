@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberSignupmemberDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,o.title,m.member_name,m.real_name,m.mobile
+        FROM QKJVIP_MEMBER_SIGNUPMEMBER T
+        join qkjvip_member_activity o on (t.activity_id=o.id)
+        join qkjvip_member m on (t.member_id=m.member_id)
+        WHERE 1=1
+        <if test="params.title != null and params.title.trim() != ''">
+            AND o.title LIKE '%${params.title}%'
+        </if>
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND t.activity_id = '${params.activityId}'
+        </if>
+        <if test="params.mobile != null and params.mobile.trim() != ''">
+            AND m.mobile = '${params.mobile}'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND ( t.member_id = '${params.memberId}'
+            or EXISTS(SELECT 1 from qkjvip_member m
+            where m.member_id=t.member_id and  ISNULL(m.memberidto, '88')!='88'
+            and m.memberidto='${params.memberId}')
+            )
+        </if>
+        <if test="params.myopenid != null and params.myopenid.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_member a
+            where a.member_id=t.member_id and a.openid='${params.myopenid}')
+        </if>
+
+    </sql>
+
+    <select id="selectQkjvipMemberSignupmemberPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupmemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupmemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryTopOne" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupmemberEntity">
+        SELECT top 1 T.*
+        FROM QKJVIP_MEMBER_SIGNUPMEMBER T
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND t.activity_id = '${params.activityId}'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND ( t.member_id = '${params.memberId}'
+            or EXISTS(SELECT 1 from qkjvip_member m
+            where m.member_id=t.member_id and  ISNULL(m.memberidto, '88')!='88'
+            and m.memberidto='${params.memberId}')
+            )
+        </if>
+        <if test="params.myopenid != null and params.myopenid.trim() != ''">
+            AND EXISTS (
+            SELECT 1 from qkjvip_member_jueru a
+            where a.crm_memberid = t.member_id and a.appopenid='${params.myopenid}'
+            )
+        </if>
+    </select>
+</mapper>

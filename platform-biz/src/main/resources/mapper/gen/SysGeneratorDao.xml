@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.gen.dao.SysGeneratorDao">
+	<select id="queryPage" resultType="com.platform.modules.gen.entity.ResultMapEntity">
+		<if test="params.driverClassName != null and params.driverClassName == 'com.mysql.cj.jdbc.Driver'">
+			SELECT TABLE_NAME, ENGINE, TABLE_COMMENT, CREATE_TIME FROM INFORMATION_SCHEMA.TABLES
+			WHERE TABLE_SCHEMA = (select database())
+			<if test="params.tableName != null and params.tableName.trim() != ''">
+				AND TABLE_NAME LIKE '%${params.tableName}%'
+			</if>
+			ORDER BY CREATE_TIME DESC
+		</if>
+		<if test="params.driverClassName != null and params.driverClassName == 'oracle.jdbc.driver.OracleDriver'">
+			SELECT TABLE_NAME, COMMENTS TABLE_COMMENT FROM
+				(SELECT ROWNUM AS RN,USER_TAB_COMMENTS.TABLE_NAME TABLE_NAME,USER_TAB_COMMENTS.COMMENTS COMMENTS,USER_TABLES.TABLESPACE_NAME
+				FROM USER_TAB_COMMENTS
+				LEFT JOIN USER_TABLES
+				ON USER_TABLES.TABLE_NAME = USER_TAB_COMMENTS.TABLE_NAME
+				WHERE 1 = 1
+				<if test="params.tableName != null and params.tableName.trim() != ''">
+					AND USER_TABLES.TABLE_NAME LIKE CONCAT(CONCAT('%', #{params.tableName}), '%')
+				</if>
+				)
+		</if>
+		<if test="params.driverClassName != null and params.driverClassName == 'com.microsoft.sqlserver.jdbc.SQLServerDriver'">
+			select NAME TABLE_NAME,create_date CREATE_TIME from sys.tables  where 1=1
+			<if test="params.tableName != null and params.tableName.trim() != ''">
+				AND NAME LIKE CONCAT(CONCAT('%', #{params.tableName}), '%')
+			</if>
+			order by create_date desc
+		</if>
+	</select>
+
+	<select id="queryTable" resultType="com.platform.modules.gen.entity.ResultMapEntity">
+		<if test="driverClassName != null and driverClassName == 'com.mysql.cj.jdbc.Driver'">
+			SELECT TABLE_NAME TABLENAME, ENGINE, TABLE_COMMENT TABLECOMMENT, CREATE_TIME CREATETIME FROM INFORMATION_SCHEMA.TABLES
+				WHERE TABLE_SCHEMA = (SELECT database()) AND TABLE_NAME = #{tableName}
+		</if>
+
+		<if test="driverClassName != null and driverClassName == 'oracle.jdbc.driver.OracleDriver'">
+			SELECT USER_TAB_COMMENTS.TABLE_NAME TABLE_NAME,
+				USER_TAB_COMMENTS.COMMENTS   table_Comment,
+				USER_TABLES.TABLESPACE_NAME
+			FROM USER_TAB_COMMENTS
+			LEFT JOIN USER_TABLES
+			ON USER_TABLES.TABLE_NAME = USER_TAB_COMMENTS.TABLE_NAME
+			WHERE USER_TAB_COMMENTS.table_name = #{tableName}
+		</if>
+
+		<if test="driverClassName != null and driverClassName == 'com.microsoft.sqlserver.jdbc.SQLServerDriver'">
+			select NAME TABLE_NAME,create_date CREATE_TIME from sys.tables  where 1=1 and NAME= #{tableName}
+		</if>
+	</select>
+
+	<select id="queryColumns" resultType="com.platform.modules.gen.entity.ColumnEntity">
+		<if test="driverClassName != null and driverClassName == 'com.mysql.cj.jdbc.Driver'">
+			SELECT COLUMN_NAME, DATA_TYPE, COLUMN_COMMENT COMMENTS, COLUMN_KEY, EXTRA FROM INFORMATION_SCHEMA.COLUMNS
+				WHERE TABLE_NAME = #{tableName} AND TABLE_SCHEMA = (SELECT database()) ORDER BY ORDINAL_POSITION
+		</if>
+
+		<if test="driverClassName != null and driverClassName == 'com.microsoft.sqlserver.jdbc.SQLServerDriver'">
+			select cast(b.name as varchar(100))   column_name,
+			case when cast(d.data_type as varchar(100)) ='nvarchar' then 'varchar'
+			when cast(d.data_type as varchar(100)) ='tinyint' then 'int'
+			else cast(d.data_type as varchar(100)) end  DATA_TYPE,
+			cast(C.value as varchar(100)) COMMENTS,
+			(
+			select top 1 case when ind.is_primary_key=1 then b.name else null end
+
+			from sys.index_columns ic
+			left join sys.indexes ind
+			on ic.object_id=ind.object_id
+			and ic.index_id=ind.index_id
+			and ind.name like 'PK_%'
+			where ic.object_id=obj.object_id
+			and ic.column_id=b.column_id
+			) as COLUMN_KEY
+
+			from sys.tables a
+			INNER JOIN sys.objects obj on (obj.object_id= a.object_id)
+			inner join sys.columns b on b.object_id = a.object_id
+			left join information_schema.columns d on d.table_name=a.name and d.column_name=b.name
+			left join sys.extended_properties c on c.major_id = b.object_id and c.minor_id = b.column_id
+			where a.name = #{tableName}
+		</if>
+
+		<if test="driverClassName != null and driverClassName == 'oracle.jdbc.driver.OracleDriver'">
+			SELECT COLUMN_NAME COLUMN_NAME,
+				lower(DATA_TYPE || decode(DATA_TYPE, 'DATE', '', '(' || nvl(DATA_PRECISION, data_length) || nvl2(nullif(DATA_SCALE, 0), ',' || data_scale, '') || ')')) DATA_TYPE,
+				(SELECT COMMENTS FROM USER_COL_COMMENTS WHERE TABLE_NAME = #{tableName} AND COLUMN_NAME = USER_TAB_COLUMNS.COLUMN_NAME) COMMENTS,
+				(SELECT COL.COLUMN_NAME FROM USER_CONSTRAINTS CON, USER_CONS_COLUMNS COL WHERE CON.CONSTRAINT_NAME = COL.CONSTRAINT_NAME AND CON.CONSTRAINT_TYPE = 'P' AND COL.TABLE_NAME = #{params.tableName}) COLUMN_KEY
+			FROM USER_TAB_COLUMNS
+			LEFT JOIN USER_TABLES
+				ON USER_TABLES.TABLE_NAME = USER_TAB_COLUMNS.TABLE_NAME
+				WHERE USER_TAB_COLUMNS.TABLE_NAME = #{tableName}
+		</if>
+	</select>
+</mapper>

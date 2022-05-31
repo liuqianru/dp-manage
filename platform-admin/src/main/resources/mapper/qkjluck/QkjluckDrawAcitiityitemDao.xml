@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjluck.dao.QkjluckDrawAcitiityitemDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJLUCK_DRAW_ACITIITYITEM T
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND T.ACTIVITY_ID = '${params.activityId}'
+        </if>
+    </sql>
+
+    <select id="selectQkjluckDrawAcitiityitemPage" resultType="com.platform.modules.qkjluck.entity.QkjluckDrawAcitiityitemEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjluck.entity.QkjluckDrawAcitiityitemEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteBatchByMain">
+        DELETE FROM QKJLUCK_DRAW_ACITIITYITEM WHERE ACTIVITY_ID = #{mainid}
+    </delete>
+    <update id="updateResultAddressByMainId">
+		UPDATE a set a.prizetakenpathresult = (a.prizetakenpathresult + '&amp;fromid=' + a.id + '&amp;qt=' +  convert(varchar(50),isnull(a.pronum,0)))
+          from qkjluck_draw_acitiityitem a
+        where
+        a.activity_id= #{value}
+        and a.prizetakentype = 3
+
+	</update>
+</mapper>

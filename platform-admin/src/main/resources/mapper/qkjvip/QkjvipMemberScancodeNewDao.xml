@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberScancodeNewDao">
+
+    <sql id="selectSql">
+        SELECT *
+        FROM QKJVIP_MEMBER_SCANCODE_NEW T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.unionid != null and params.unionid.trim() != ''">
+            AND T.unionid= ${params.unionid}
+        </if>
+        <if test="params.startdate!=null">
+            and ${params.startdate} >= t.CreateTime
+        </if>
+        <if test="params.enddate!=null">
+            and t.CreateTime >=${params.enddate}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberScancodeNewPage"
+            resultType="com.platform.modules.qkjvip.entity.QkjvipMemberScancodeNewEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberScancodeNewEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="selectScanCityCount" resultType="int">
+        select COUNT(distinct City) num from qkjvip_member_scancode_new
+        where productname is not null and GETDATE()>=CreateTime and CreateTime>=DATEADD(year,-1,getdate()) and UnionId=#{value}
+    </select>
+    <select id="getScanCount" resultType="int">
+    select COUNT(1) from qkjvip_member_scancode_new
+    where productname is not null and GETDATE()>=CreateTime and CreateTime>=DATEADD(year,-1,getdate()) and UnionId=#{value}
+    </select>
+
+    <select id="getScanByYear" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberScancodeNewEntity">
+        select * from qkjvip_member_scancode_new
+        where productname is not null and GETDATE()>=CreateTime and CreateTime>=DATEADD(year,-1,getdate()) and UnionId='${params.unionid}'
+        order by CreateTime desc
+        <if test="params.pagesize!=null and params.pagesize>0">
+            offset ( ${params.pageindex}-1)*${params.pagesize} rows fetch next #{params.pagesize} rows only
+        </if>
+    </select>
+</mapper>

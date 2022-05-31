@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberActotherbatchDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.TOTLEPEOPLENUM,
+        T.MDYTIME,
+        T.MAIN_ID,
+        T.BATCH_NUM,
+        T.MDYUSER
+        FROM QKJVIP_MEMBER_ACTOTHERBATCH T
+        WHERE 1=1
+        <if test="params.mainId != null and params.mainId.trim() != ''">
+            AND T.MAIN_ID = '${params.mainId}'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberActotherbatchPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActotherbatchEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActotherbatchEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

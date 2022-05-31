@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipQuestionnaireQuestionDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_QUESTIONNAIRE_QUESTION T
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainId = #{params.mainid}
+        </if>
+        <if test="params.sort != null and params.sort.trim() != ''">
+            order by T.sort ${params.sort}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipQuestionnaireQuestionPage" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireQuestionEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireQuestionEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteByMainId">
+        DELETE FROM QKJVIP_QUESTIONNAIRE_QUESTION where mainId = #{value}
+    </delete>
+    <delete id="deleteByMainIds">
+        DELETE FROM QKJVIP_QUESTIONNAIRE_QUESTION WHERE mainId IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+</mapper>

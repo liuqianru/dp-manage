@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipQuestionnaireRecordDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_QUESTIONNAIRE_RECORD T
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainId = #{params.mainid}
+        </if>
+        <if test="params.openid != null and params.openid.trim() != ''">
+            AND T.openId = #{params.openid}
+        </if>
+        <if test="params.unionid != null and params.unionid.trim() != ''">
+            AND T.unionId = #{params.unionid}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipQuestionnaireRecordPage" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireRecordEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireRecordEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="queryOne" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireRecordEntity">
+        SELECT SUM(T.integral) integral, case when COUNT(1) > 0 then 1 else 0 end submitflag
+        FROM QKJVIP_QUESTIONNAIRE_RECORD T
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainId = #{params.mainid}
+        </if>
+        <if test="params.openid != null and params.openid.trim() != ''">
+            AND T.openId = #{params.openid}
+        </if>
+        <if test="params.unionid != null and params.unionid.trim() != ''">
+            AND T.unionId = #{params.unionid}
+        </if>
+        GROUP BY T.mainId,T.unionId
+    </select>
+</mapper>

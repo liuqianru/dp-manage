@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.MemberPortraitsettingDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_MEMBER_PORTRAITSETTING T
+        WHERE 1=1
+        <if test="params.settingtype != null and params.settingtype != ''">
+            AND T.settingType = #{params.settingtype}
+        </if>
+    </sql>
+
+    <select id="selectMemberPortraitsettingPage" resultType="com.platform.modules.qkjvip.entity.MemberPortraitsettingEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.MemberPortraitsettingEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

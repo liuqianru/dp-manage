@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjprm.dao.QkjprmPromotionMemberDao">
+
+    <sql id="selectSql">
+        select * from (
+        SELECT
+        *, ProductIntegral+AssistIntegral totalInteger
+        FROM QKJPRM_PROMOTION_MEMBER
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.unionid!=null and params.unionid.trim()!=''">
+            and unionid=#{params.unionid}
+        </if>
+        ) t
+    </sql>
+
+    <select id="selectQkjprmPromotionMemberPage"
+            resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionMemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionMemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="getMemberByUnionid" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionMemberEntity">
+        select *,ProductIntegral+AssistIntegral totalInteger from QKJPRM_PROMOTION_MEMBER
+        where unionid=#{value}
+    </select>
+    <select id="getCount" resultType="int">
+        SELECT
+        count(1) num
+        FROM QKJPRM_PROMOTION_MEMBER
+        WHERE 1=1
+        <if test="params.unionid!=null and params.unionid.trim()!=''">
+            and unionid=#{params.unionid}
+        </if>
+    </select>
+    <select id="getList" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionMemberEntity">
+        SELECT
+        *, ProductIntegral + AssistIntegral totalInteger
+        FROM QKJPRM_PROMOTION_MEMBER
+        WHERE 1=1
+        <if test="params.unionid!=null and params.unionid.trim()!=''">
+            and unionid=#{params.unionid}
+        </if>
+        order by totalInteger desc
+        offset #{params.pagestart,jdbcType=INTEGER} rows fetch next #{params.pagesize,jdbcType=INTEGER} rows only
+    </select>
+    <!--获取用户的产品积分 -->
+    <select id="getProductIntegral" resultType="int">
+        select isnull( sum(c.productintegral),0) productintegral from qkjvip_member_scancode_new s
+        inner join [dbo].[qkjprm_promotion_coupon] c
+        on s.productid=c.productid and c.disabled=0 and getdate()>=c.actionstartdate
+        and (c.actionenddate is null or c.actionenddate>=getdate())
+        where s.unionid=#{params.unionid} and s.scantime>=#{params.startdate}
+    </select>
+    <select id="getMemberCount" resultType="Integer">
+        select count(1) from [dbo].[qkjprm_promotion_member]
+        where (ProductIntegral + AssistIntegral)>(select (ProductIntegral + AssistIntegral) num
+        from [qkjprm_promotion_member] where unionid=#{value})
+    </select>
+    <update id="updateProductIntegral">
+        update [qkjprm_promotion_member] set ProductIntegral=t.productintegral
+from ( select m.unionid, isnull( sum(c.productintegral),0) productintegral from [qkjprm_promotion_member] m
+		inner join qkjvip_member_scancode_new s
+		on s.unionid=m.unionid
+        inner join (select distinct productid,productintegral
+					from [dbo].[qkjprm_promotion_coupon]
+					where disabled=0 and getdate()>=actionstartdate
+					and (actionenddate is null or actionenddate>=getdate())) c
+        on s.productid=c.productid
+        where s.scantime>=#{value}
+		group by m.unionid ) t
+	where t.unionid=[qkjprm_promotion_member].unionid
+    </update>
+</mapper>

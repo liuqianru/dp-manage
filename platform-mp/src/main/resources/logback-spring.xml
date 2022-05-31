@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/base.xml" />
+    <logger name="org.springframework.web" level="INFO"/>
+    <logger name="org.springboot.sample" level="TRACE" />
+
+
+    <!-- 开发、测试环境 -->
+    <springProfile name="dev">
+        <logger name="org.springframework.web" level="INFO"/>
+        <logger name="org.springboot.sample" level="INFO" />
+        <logger name="com.platform" level="DEBUG" />
+        <logger name="DING_OPEN_CLIENT_SDK_LOGGER" level="WARN">
+            <root level="WARN">
+                <appender-ref ref="appLogAppender"/>
+            </root>
+        </logger>
+    </springProfile>
+
+    <!-- 生产环境 -->
+    <springProfile name="prod">
+        <logger name="org.springframework.web" level="ERROR"/>
+        <logger name="org.springboot.sample" level="ERROR" />
+        <logger name="com.platform" level="ERROR" />
+        <logger name="DING_OPEN_CLIENT_SDK_LOGGER" level="WARN">
+            <root level="WARN">
+                <appender-ref ref="appLogAppender"/>
+            </root>
+        </logger>
+    </springProfile>
+
+</configuration>

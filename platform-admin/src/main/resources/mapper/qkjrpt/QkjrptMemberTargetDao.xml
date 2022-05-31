@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrpt.dao.QkjrptMemberTargetDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJRPT_MEMBER_TARGET T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjrptMemberTargetPage" resultType="com.platform.modules.qkjrpt.entity.QkjrptMemberTargetEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrpt.entity.QkjrptMemberTargetEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptMemberTargetEntity">
+        SELECT sum(T.TargetNum) targetnum,T.IdentityLevel
+        FROM QKJRPT_MEMBER_TARGET T
+        WHERE 1=1
+        <if test="params.targetyear != null and params.targetyear != ''">
+            AND T.TargetYear = #{params.targetyear}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND T.AreaCode = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        GROUP BY T.IdentityLevel
+        ORDER BY T.IdentityLevel ASC
+    </select>
+</mapper>

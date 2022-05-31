@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrpt.dao.QkjrptReportMembertempDao">
+    <select id="getMemberAreaReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMembertempEntity">
+        SELECT COUNT(*) cnt, T.AreaCode, T.AreaName
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.identitylevel != null and params.identitylevel != ''">
+            AND T.IdentityLevel = #{params.identitylevel}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        GROUP BY T.AreaCode, T.AreaName
+        ORDER BY cnt DESC
+    </select>
+    <select id="getMemberAreaLevelReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMemberAreaLevelEntity">
+        SELECT count(1) cnt,(CASE WHEN (T.IdentityLevel IS NULL OR T.IdentityLevel='') THEN '99' ELSE T.IdentityLevel END) IdentityLevel
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND (CASE WHEN (T.AreaCode IS NULL OR T.AreaCode='') THEN '99' ELSE T.AreaCode END) = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        GROUP BY T.IdentityLevel
+        ORDER BY T.IdentityLevel ASC
+    </select>
+    <select id="getMemberAreaLevelRatio" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMemberAreaLevelEntity">
+        SELECT (CASE A.lastMonthCnt WHEN 0 THEN 0.00 ELSE CONVERT (DECIMAL (18, 2),(A.nowCnt * 1.0 / A.lastMonthCnt * 100))END) ringRatio,
+        (CASE A.lastYearCnt WHEN 0 THEN 0.00 ELSE CONVERT (DECIMAL (18, 2),(A.nowCnt * 1.0 / A.lastYearCnt * 100))END) yearRatio
+        FROM (SELECT count(1) nowCnt, (SELECT count(1)
+        FROM QKJRPT_REPORT_MEMBERTEMP T1
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T1.CreateOn &gt;= dateadd(mm, -1, CONVERT(datetime,#{params.startregtime}))
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T1.CreateOn &lt; dateadd(mm, -1, CONVERT(datetime,#{params.endregtime}))
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T1.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND (CASE WHEN (T1.AreaCode IS NULL OR T1.AreaCode='') THEN '99' ELSE T1.AreaCode END) = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T1.IdentityGroup = #{params.identitygroup}
+        </if>) as lastMonthCnt, (SELECT count(1)
+        FROM QKJRPT_REPORT_MEMBERTEMP T2
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T2.CreateOn &gt;= dateadd(yyyy, -1, CONVERT(datetime,#{params.startregtime}))
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T2.CreateOn &lt; dateadd(yyyy, -1, CONVERT(datetime,#{params.endregtime}))
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T2.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND (CASE WHEN (T2.AreaCode IS NULL OR T2.AreaCode='') THEN '99' ELSE T2.AreaCode END) = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T2.IdentityGroup = #{params.identitygroup}
+        </if>) as lastYearCnt
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND (CASE WHEN (T.AreaCode IS NULL OR T.AreaCode='') THEN '99' ELSE T.AreaCode END) = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>) A
+    </select>
+    <select id="getMemberOrgReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMemberOrgEntity">
+        SELECT COUNT(*) cnt, T.ReportDepNo
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.identitylevel != null and params.identitylevel != ''">
+            AND T.IdentityLevel = #{params.identitylevel}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        GROUP BY T.ReportDepNo
+        ORDER BY cnt DESC
+    </select>
+    <select id="getMemberOrgLevelReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMemberOrgLevelEntity">
+        SELECT COUNT(*) cnt, (CASE WHEN (T.AreaCode IS NULL OR T.AreaCode='') THEN '99' ELSE T.AreaCode END) AreaCode, (CASE WHEN (T.IdentityLevel IS NULL OR T.IdentityLevel='') THEN '99' ELSE T.IdentityLevel END) IdentityLevel
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND (CASE WHEN (T.AreaCode IS NULL OR T.AreaCode='') THEN '99' ELSE T.AreaCode END) = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        <if test="params.grouporg != null and params.grouporg.trim() != ''">
+            AND (CASE WHEN (T.ReportDepNo IS NULL OR T.ReportDepNo='') THEN '99' ELSE T.ReportDepNo END) = #{params.grouporg}
+        </if>
+        GROUP BY T.AreaCode, T.IdentityLevel
+        ORDER BY T.IdentityLevel ASC
+    </select>
+    <select id="getChartMapReport" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportChartMapEntity">
+        SELECT T.Province,T.City,T.District,T.MemberGroup,count(1) cnt
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        WHERE T.CreateOn between dateadd(month,-1,GETDATE()) AND GETDATE()
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        GROUP BY T.Province,T.City,T.District,T.MemberGroup
+    </select>
+
+    <sql id="selectSql">
+        SELECT T.*, ISNULL(A.activityCnt, 0) activityCnt,ISNULL(B.activityAmt, 0.00) activityAmt
+        FROM QKJRPT_REPORT_MEMBERTEMP T
+        LEFT JOIN (SELECT COUNT(1) activityCnt, Mobile FROM qkjrpt_report_activitytemp GROUP BY Mobile) A ON (T.mobile=A.Mobile)
+        LEFT JOIN (SELECT SUM(Amount) activityAmt, Mobile FROM qkjrpt_report_activitytemp GROUP BY Mobile) B ON (T.mobile=B.Mobile)
+        WHERE 1=1
+        <if test="params.startregtime != null and params.startregtime != ''">
+            AND T.CreateOn &gt;= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime != ''">
+            AND T.CreateOn &lt; #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup != ''">
+            AND T.MemberGroup = #{params.membergroup}
+        </if>
+        <if test="params.areacode != null and params.areacode != ''">
+            AND T.AreaCode = #{params.areacode}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup != ''">
+            AND T.IdentityGroup = #{params.identitygroup}
+        </if>
+        <if test="params.grouporg != null and params.grouporg.trim() != ''">
+            AND T.ReportDepNo = #{params.grouporg}
+        </if>
+    </sql>
+    <select id="selectQkjrptReportMembertempPage" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportMembertempEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberOrderDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        T.ORDERID,
+        T.PRODUCTNAME,
+        T.SALEPRICE,
+        T.QUANTITY,
+        T.REALTOTALPRICE,
+        T.ORDERDATE,
+        T.CELLPHONE,
+        T.BUYERTYPE,
+        T.SHOPNAME,
+        T.SHOPPROVINCENAME,
+        T.SHOPCITYNAME,
+        T.ORDERSTATUS,
+        T.GIVEAWAY
+        FROM QKJVIP_MEMBER_ORDER T
+        WHERE 1=1
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND T.PRODUCTNAME LIKE '%${params.productname}%'
+        </if>
+        <if test="params.orderid != null and params.orderid.trim() != ''">
+            AND T.ORDERID LIKE '%${params.orderid}%'
+        </if>
+        <if test="params.shopname != null and params.shopname.trim() != ''">
+            AND T.SHOPNAME LIKE '%${params.shopname}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberOrderPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryOrderIdList" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberOrderEntity">
+        SELECT OrderId FROM QKJVIP_MEMBER_ORDER
+        WHERE OrderId in
+        <foreach collection="mbList" item="item" open="(" close=")" separator=",">
+            #{item.orderid}
+        </foreach>
+    </select>
+
+    <update id="updateBatchByOrderyId" parameterType="java.util.List">
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            update qkjvip_member_order
+            <set>
+                ProductName=#{item.productname},
+                SalePrice=#{item.saleprice},
+                Quantity=#{item.quantity},
+                RealTotalPrice=#{item.realtotalprice},
+                orderdate=#{item.orderdate},
+                CellPhone=#{item.cellphone},
+                buyertype=#{item.buyertype},
+                ShopName=#{item.shopname},
+                ShopProvinceName=#{item.shopprovincename},
+                ShopCityName=#{item.shopcityname},
+                OrderStatus=#{item.orderstatus},
+                Giveaway=#{item.giveaway}
+            </set>
+            where OrderId=#{item.orderid}
+        </foreach>
+    </update>
+
+    <delete id="deleteBatchByOrderyId" parameterType="java.util.List">
+        DELETE FROM  qkjvip_member_order  where OrderId in
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+
+           #{item.orderid}
+        </foreach>
+    </delete>
+
+    <delete id="deleteBatchByOrder">
+        DELETE FROM qkjvip_member_order WHERE OrderId IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item.orderid}
+        </foreach>
+    </delete>
+</mapper>

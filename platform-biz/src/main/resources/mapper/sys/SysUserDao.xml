@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.sys.dao.SysUserDao">
+	<!-- 查询用户的所有权限 -->
+	<select id="queryAllPerms" resultType="string">
+		SELECT M.PERMS FROM SYS_USER_ROLE UR
+			LEFT JOIN SYS_ROLE_MENU RM ON UR.ROLE_ID = RM.ROLE_ID
+			LEFT JOIN SYS_MENU M ON RM.MENU_ID = M.MENU_ID
+		WHERE UR.USER_ID = #{userId}
+	</select>
+
+	<!-- 查询用户的所有菜单ID --> 
+	<select id="queryAllMenuId" resultType="string">
+		SELECT DISTINCT RM.MENU_ID FROM SYS_USER_ROLE UR
+			LEFT JOIN SYS_ROLE_MENU RM ON UR.ROLE_ID = RM.ROLE_ID
+		WHERE UR.USER_ID = #{userId}
+	</select>
+	
+	<select id="selectListPage" resultType="com.platform.modules.sys.entity.SysUserEntity">
+		SELECT T.* FROM SYS_USER T
+		WHERE 1=1
+		<if test="params.status != null">
+			AND T.STATUS = #{params.status}
+		</if>
+		<if test="params.userId != null and params.userId != ''">
+			AND t.user_id= #{params.userId}
+		</if>
+		<if test="params.userName != null and params.userName != ''">
+			AND T.USER_NAME LIKE '%${params.userName}%'
+		</if>
+		<if test="params.oaId != null and params.oaId != ''">
+			AND T.oa_id = #{params.oaId}
+		</if>
+		<if test="params.dingId != null and params.dingId != ''">
+			AND T.ding_id = #{params.dingId}
+		</if>
+		<if test="params.realName != null and params.realName != ''">
+			AND T.REAL_NAME LIKE '%${params.realName}%'
+		</if>
+		<if test="params.orgNo != null and params.orgNo != ''">
+			AND T.ORG_NO = #{params.orgNo}
+		</if>
+		<if test="params.realName != null and params.realName != ''">
+			AND T.REAL_NAME like '%${params.realName}%'
+		</if>
+		<if test="params.createState != null">
+			AND T.CREATE_STATE=#{params.createState}
+		</if>
+		<if test="params.mobile != null and params.mobile.trim() != ''">
+			AND T.MOBILE=#{params.mobile}
+		</if>
+		<if test="params.mobilelist !=null and params.mobilelist.length()>0">
+			AND T.MOBILE
+			<foreach item="item" collection="array" open="(" separator="," close=")">
+				#{params.mobilelist}
+			</foreach>
+		</if>
+
+	</select>
+	<!-- 更新状态 -->
+	<update id="updateStatus" parameterType="com.platform.modules.sys.entity.SysUserEntity">
+		UPDATE SYS_USER SET STATUS = #{status} WHERE user_id = #{userId}
+	</update>
+</mapper>

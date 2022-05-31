@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberActivitymaterialDao">
+
+    <sql id="selectSql">
+        SELECT
+        CASE when ISNULL(a.memberidto, 'tt') != 'tt' and a.memberidto != '' then a.memberidto
+        else a.member_id end as memberid,
+        T.*
+        FROM QKJVIP_MEMBER_ACTIVITYMATERIAL T
+        left join qkjvip_member a on (t.memberid=a.member_id)
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND T.ACTIVITY_ID = #{params.activityId}
+        </if>
+        <if test="params.recestate != null">
+            AND T.recestate = #{params.recestate}
+        </if>
+        <if test="params.type != null">
+            AND T.type = #{params.type}
+        </if>
+    </sql>
+
+    <sql id="selectSql2">
+        SELECT a.title, a.star_date, a.end_date,m.member_id memberid, m.company_name, m.job_title, ISNULL(m.member_name, m.real_name) membername, m.mobile, T.name, T.recestate, T.receremark
+        FROM qkjvip_member_activitymbs amb
+        LEFT JOIN QKJVIP_MEMBER_ACTIVITYMATERIAL T ON (T.ACTIVITY_ID = amb.activity_id and T.memberid = amb.member_id)
+        LEFT JOIN qkjvip_member_activity a ON (amb.ACTIVITY_ID = a.id)
+        LEFT JOIN Func_GetNewestMemberInfo() m ON (amb.member_id = m.member_id)
+        where 1 = 1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND amb.ACTIVITY_ID = #{params.activityId}
+        </if>
+        <if test="params.type != null">
+            AND T.type = #{params.type}
+        </if>
+        <if test="params.recestate != null">
+            AND T.recestate = #{params.recestate}
+        </if>
+        <if test="params.atype != null and params.atype.trim() != ''">
+            AND a.atype = #{params.atype}
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND m.member_id = #{params.memberid}
+        </if>
+        <if test="params.mobile != null and params.mobile.trim() != ''">
+            AND m.mobile = #{params.mobile}
+        </if>
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND ISNULL(m.member_name, m.real_name) LIKE '%${params.membername}%'
+        </if>
+        <if test="params.currentuserid != null and params.currentuserid.trim() != ''">
+            AND (m.add_user = #{params.currentuserid} OR m.referrer = #{params.currentuserid}
+            OR EXISTS (
+            SELECT 1 FROM qkjvip_member_orguser u
+            WHERE u.Disabled=0 AND (u.MemberId=m.member_id or u.MemberId=m.memberidto) AND u.UserId=#{params.currentuserid}
+            )
+            <if test="params.listorgno != null and params.listorgno.trim() != ''">
+                OR EXISTS (
+                SELECT 1 FROM qkjvip_member_datadep d
+                WHERE d.Disabled=0 AND (d.MemberId=m.member_id or d.MemberId=m.memberidto)
+                AND d.OrgNo in
+                <foreach item="orgno" collection="params.listorgno.split(',')" open="(" separator="," close=")">
+                    #{orgno}
+                </foreach>
+                )
+            </if>
+            )
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberActivitymaterialPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymaterialEntity">
+        <include refid="selectSql2"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymaterialEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteBatchByOrder">
+        DELETE FROM QKJVIP_MEMBER_ACTIVITYMATERIAL WHERE activity_id = #{activityId} and type = #{type}
+    </delete>
+</mapper>

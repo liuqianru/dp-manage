@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipLotteryUsersDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_LOTTERY_USERS T
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainId = #{params.mainid}
+        </if>
+        <if test="params.openid != null and params.openid.trim() != ''">
+            AND T.openId = #{params.openid}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipLotteryUsersPage" resultType="com.platform.modules.qkjvip.entity.QkjvipLotteryUsersEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipLotteryUsersEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryLotteryUsers" resultType="com.platform.modules.qkjvip.entity.QkjvipLotteryUsersEntity">
+        <choose>
+            <when test="params.usertype != null and params.usertype == 2"> <!-- 活动签到 -->
+                SELECT s.member_id id,ISNULL(m.real_name, m.member_name) userName,m.mobile,m.head_img_url headImgUrl FROM qkjvip_member_signupmember s
+                JOIN qkjvip_member m ON (s.member_id=m.member_id)
+                WHERE 1=1
+                <if test="params.activityid != null and params.activityid.trim() != ''">
+                    AND s.activity_id = #{params.activityid}
+                </if>
+                <if test="params.mainid != null and params.mainid.trim() != ''">
+                    <if test="params.repeatallowed != null and params.repeatallowed == 0">
+                        AND NOT EXISTS (SELECT 1 FROM qkjvip_lottery_winners WHERE userId=s.member_id AND mainId=#{params.mainid})
+                    </if>
+                </if>
+            </when>
+            <otherwise> <!-- 导入和扫码-->
+                SELECT T.*
+                FROM QKJVIP_LOTTERY_USERS T
+                WHERE 1=1
+                <if test="params.mainid != null and params.mainid.trim() != ''">
+                    AND T.mainId = #{params.mainid}
+                    <if test="params.repeatallowed != null and params.repeatallowed == 0">
+                        AND NOT EXISTS (SELECT 1 FROM qkjvip_lottery_winners WHERE userId=T.id AND mainId=#{params.mainid})
+                    </if>
+                </if>
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="queryWinners" resultType="com.platform.modules.qkjvip.entity.QkjvipLotteryUsersEntity">
+        <choose>
+            <when test="params.usertype != null and params.usertype == 2"> <!-- 活动签到 -->
+                SELECT s.member_id id,ISNULL(m.real_name, m.member_name) userName,m.mobile,m.head_img_url headImgUrl,w.prizeLevel FROM qkjvip_member_signupmember s
+                JOIN qkjvip_member m ON (s.member_id=m.member_id)
+                INNER JOIN qkjvip_lottery_winners w ON (s.member_id = w.userId)
+                WHERE 1=1
+                <if test="params.activityid != null and params.activityid.trim() != ''">
+                    AND s.activity_id = #{params.activityid}
+                </if>
+                <if test="params.mainid != null and params.mainid.trim() != ''">
+                    AND w.mainId = #{params.mainid}
+                </if>
+            </when>
+            <otherwise> <!-- 导入和扫码-->
+                SELECT u.*, w.prizeLevel FROM qkjvip_lottery_users u
+                INNER JOIN qkjvip_lottery_winners w ON (u.id = w.userId)
+                WHERE 1=1
+                <if test="params.mainid != null and params.mainid.trim() != ''">
+                    AND u.mainId = #{params.mainid}
+                </if>
+            </otherwise>
+        </choose>
+    </select>
+
+    <delete id="deleteByMainId">
+        DELETE FROM QKJVIP_LOTTERY_USERS WHERE mainId = #{value}
+    </delete>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjprm.dao.QkjprmPromotionCouponDao">
+
+    <sql id="selectSql">
+        SELECT
+        t.*
+        FROM QKJPRM_PROMOTION_COUPON T
+        WHERE 1=1 and T.Disabled=0
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.startDate!=null ">
+            <![CDATA[ and T.ActionStartDate<=#{params.startDate}]]>
+        </if>
+        <if test="params.endDate!=null">
+            and (t.ActionEndDate is null or t.ActionEndDate>=#{params.endDate})
+        </if>
+        order by t.createtime
+    </sql>
+
+    <select id="selectQkjprmPromotionCouponPage"
+            resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="getVaildList" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponEntity">
+
+ select t.*,r.id couponsn,
+        case when r.id is not null then 1 else 0 end isreceive,
+		case when e.id is not null then 1 else 0 end isexchange
+        from QKJPRM_PROMOTION_COUPON t
+        left join [qkjprm_promotion_couponreceive] r
+		on r.couponid=t.id and r.unionid=#{memberunionid}
+		and Convert(nvarchar(20),r.createtime,111)=Convert(nvarchar(20),getdate(),111)
+		left join [qkjprm_promotion_couponexchange] e
+		on r.id=e.couponreceiveid
+        where disabled=0 and getdate()>= ActionStartDate and (ActionEndDate is null or ActionEndDate>getdate())
+    </select>
+    <select id="getCouponByReceive" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponEntity">
+        select c.*,1 isreceive,r.unionid receiveuserunionid from  [dbo].[qkjprm_promotion_couponreceive] r
+        inner join [dbo].[qkjprm_promotion_coupon] c
+        on r.[CouponId]=c.id and c.disabled=0
+        where r.id=#{value}
+    </select>
+
+    <select id="getLock" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponEntity">
+        <![CDATA[SELECT * FROM QKJPRM_PROMOTION_COUPON WHERE ID=#{value} and disabled=0 for update    ]]>
+    </select>
+    <update id="updateStock" >
+        update [qkjprm_promotion_coupon] set stock=stock-#{params.num} where id=#{params.id} and (stock-#{params.num})>0
+    </update>
+</mapper>

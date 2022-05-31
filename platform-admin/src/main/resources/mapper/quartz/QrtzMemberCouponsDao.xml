@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.platform.modules.quartz.dao.QrtzMemberCouponsDao">
+	<select id="queryList" resultType="com.platform.modules.quartz.entity.QrtzMemberCouponsEntity">
+		SELECT cp.id,tmpcp.* FROM qkjvip_member_coupons cp WITH(NOLOCK)
+		INNER JOIN tmp_qkjvip_member_coupons tmpcp WITH(NOLOCK) ON (cp.couponid=tmpcp.couponid and cp.userid=tmpcp.userid)
+	</select>
+</mapper>

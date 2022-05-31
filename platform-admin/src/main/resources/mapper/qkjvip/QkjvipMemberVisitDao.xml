@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberVisitDao">
+
+    <sql id="selectSql">
+        SELECT T.*, ISNULL(m.real_name, m.member_name) member_name FROM QKJVIP_MEMBER_VISIT T
+        LEFT JOIN Func_GetNewestMemberInfo() m ON (m.member_id = T.member_id)
+        WHERE 1=1
+        <if test="params.id != null and params.id.trim() != ''">
+            AND T.ID = #{params.id}
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND T.MEMBER_ID = #{params.memberId}
+        </if>
+        <if test="params.mobile != null and params.mobile.trim() != ''">
+            AND T.MOBILE = #{params.mobile}
+        </if>
+        <if test="params.memberName != null and params.memberName.trim() != ''">
+            AND m.member_name like '%${params.memberName}%'
+        </if>
+        <if test="params.visitType != null and params.visitType != ''">
+            AND T.visit_type = #{params.visitType}
+        </if>
+        <if test="params.visitStatus != null and params.visitStatus != ''">
+            AND T.VISIT_STATUS = #{params.visitStatus}
+        </if>
+        <if test="params.visitStartDate != null and params.visitStartDate != ''">
+            AND T.visit_start_date &gt;= #{params.visitStartDate}
+        </if>
+        <if test="params.visitEndDate != null and params.visitEndDate != ''">
+            AND T.visit_end_date &lt; #{params.visitEndDate}
+        </if>
+        <if test="params.dateType != null and params.dateType != '' and params.dateType == 1">
+            AND T.visit_start_date >= dateadd(MONTH ,- 1, GETDATE())
+        </if>
+        <if test="params.dateType != null and params.dateType != '' and params.dateType == 3">
+            AND T.visit_start_date >= dateadd(MONTH ,- 3, GETDATE())
+        </if>
+        <if test="params.dateType != null and params.dateType != '' and params.dateType == 6">
+            AND T.visit_start_date >= dateadd(MONTH ,- 6, GETDATE())
+        </if>
+        <if test="params.dateType != null and params.dateType != '' and params.dateType == 12">
+            AND T.visit_start_date >= dateadd(MONTH ,- 12, GETDATE())
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberVisitPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberVisitEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberVisitEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <update id="closeById">
+		UPDATE QKJVIP_MEMBER_VISIT SET VISIT_STATUS = 2 WHERE id = #{value}
+	</update>
+</mapper>

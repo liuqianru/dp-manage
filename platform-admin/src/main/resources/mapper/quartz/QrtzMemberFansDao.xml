@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.quartz.dao.QrtzMemberFansDao">
+	<select id="queryAll" resultType="com.platform.modules.quartz.entity.QrtzMemberFansEntity">
+		SELECT AppId, OpenId, UnionId FROM qkjvip_member_fans
+		WHERE IsUnSubscribe = 0 AND (crm_memberid IN ${params.memberidstr} or OpenId IN ${params.openidStr})
+		<if test="params.appidstr != null and params.appidstr.trim() != ''">
+			AND appid IN ${params.appidstr}
+		</if>
+		UNION
+		SELECT WechatAppId AppId, AppOpenId OpenId, UnionId FROM qkjvip_member_jueru
+		WHERE memberchannel = 200 and disabled=0 and IsSubscribe = 1 and (crm_memberid IN ${params.memberidstr} or AppOpenId IN ${params.openidStr})
+		<if test="params.appidstr != null and params.appidstr.trim() != ''">
+			AND WechatAppId IN ${params.appidstr}
+		</if>
+	</select>
+
+    <select id="queryList" resultType="com.platform.modules.quartz.entity.QrtzMemberFansEntity">
+		SELECT mf.id,tmpmf.* FROM qkjvip_member_fans mf
+		INNER JOIN tmp_qkjvip_member_fans tmpmf ON (mf.OpenId=tmpmf.OpenId AND mf.AppId=tmpmf.AppId)
+	</select>
+
+	<select id="queryByMemberMessageQuery" resultType="com.platform.modules.quartz.entity.QrtzMemberFansEntity">
+		SELECT COUNT(*) membernum, ServiceName, AppId FROM qkjvip_member_fans
+		WHERE IsUnSubscribe = 0 AND (crm_memberid IN ${params.userStr} or OpenId IN ${params.openidStr})
+		GROUP BY ServiceName, AppId
+		UNION
+		SELECT COUNT(*) membernum, ServiceName, WechatAppId AppId FROM qkjvip_member_jueru
+		WHERE memberchannel=200 and disabled=0 and IsSubscribe = 1 and (crm_memberid IN ${params.userStr} or AppOpenId IN ${params.openidStr})
+		GROUP BY ServiceName, WechatAppId
+	</select>
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrpt.dao.QkjrptReportGroupdistributeDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJRPT_REPORT_GROUPDISTRIBUTE T
+        WHERE T.Disabled = 0
+        <if test="params.distributetype != null and params.distributetype != ''">
+            AND T.DistributeType = #{params.distributetype}
+        </if>
+        <if test="params.primaryarea != null and params.primaryarea != ''">
+            AND T.primaryarea = #{params.primaryarea}
+        </if>
+        <if test="params.secondaryarea != null and params.secondaryarea != ''">
+            AND T.secondaryarea = #{params.secondaryarea}
+        </if>
+        <if test="params.tertiaryarea != null and params.tertiaryarea != ''">
+            AND T.tertiaryarea = #{params.tertiaryarea}
+        </if>
+
+        <if test="params.type != null and params.type != ''">
+            AND T.distributetype = #{params.type}
+        </if>
+
+    </sql>
+
+    <select id="selectQkjrptReportGroupdistributePage"
+            resultType="com.platform.modules.qkjrpt.entity.QkjrptReportGroupdistributeEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportGroupdistributeEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <!--统计所有一级区域数据 -->
+    <select id="getPrimaryAreaDst" resultType="com.platform.modules.qkjrpt.domain.QkjrptGroupDistributeStatic">
+        select PrimaryArea AreaValue,dt.name AreaName,count(1) DstCount
+                        from [dbo].[qkjrpt_report_groupdistribute]gdt
+                        inner join [sys_dict] dt
+                        on dt.value=gdt.PrimaryArea and dt.status=1
+                        inner join [sys_dict_group] dg
+                        on dt.group_id=dg.id and dg.code='AREAONE'
+                        where disabled=0 and gdt.DistributeType=#{params.type}
+                        group by PrimaryArea,dt.name
+    </select>
+    <!--统计一级区域下所有二级区域数据 -->
+    <select id="getSecondaryAreaDst" resultType="com.platform.modules.qkjrpt.domain.QkjrptGroupDistributeStatic">
+        select SecondaryArea AreaValue,dt.name AreaName,count(1) DstCount
+        from [dbo].[qkjrpt_report_groupdistribute]gdt
+        inner join [sys_dict] dt
+        on dt.value=gdt.SecondaryArea and dt.status=1
+        inner join [sys_dict_group] dg
+        on dt.group_id=dg.id and dg.code='AREATWO'
+        where disabled=0 and gdt.DistributeType=#{params.type}
+        <if test="params.primary!=null and params.primary.trim()!=''">
+            and gdt.PrimaryArea=#{params.primary}
+        </if>
+        group by SecondaryArea,dt.name
+    </select>
+    <!--统计二级区域下所有三级区域数据 -->
+    <select id="getTertiaryAreaDst" resultType="com.platform.modules.qkjrpt.domain.QkjrptGroupDistributeStatic">
+        select TertiaryArea AreaValue,dt.name AreaName,count(1) DstCount
+        from [dbo].[qkjrpt_report_groupdistribute]gdt
+        inner join [sys_dict] dt
+        on dt.value=gdt.TertiaryArea and dt.status=1
+        inner join [sys_dict_group] dg
+        on dt.group_id=dg.id and dg.code='AREATHREE'
+        where disabled=0 and gdt.DistributeType=#{params.type}
+        <if test="params.secondary!=null and params.secondary.trim()!=''">
+            and gdt.SecondaryArea=#{params.secondary}
+        </if>
+        <if test="params.tertiary!=null and params.tertiary.trim()!=''">
+            and gdt.TertiaryArea=#{params.tertiary}
+        </if>
+        group by TertiaryArea,dt.name
+    </select>
+
+</mapper>

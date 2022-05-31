@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderWarehouseDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,a.housename parentname
+        FROM QKJVIP_ORDER_WAREHOUSE T
+        left join QKJVIP_ORDER_WAREHOUSE a on (t.PARENT_ID = a.id)
+        WHERE 1=1
+        <if test="params.housename != null and params.housename.trim() != ''">
+            AND T.HOUSENAME LIKE '%${params.housename}%'
+        </if>
+        <if test="params.parentId != null and params.parentId.trim() != ''">
+            AND a.PARENT_ID = #{params.parentId}
+        </if>
+        <if test="params.selectempth != null and params.selectempth.trim() != ''">
+            AND not EXISTS (
+            SELECT * from qkjvip_order_warepro c where c.wareid = t.id and c.disabled = 0
+            )
+
+        </if>
+        <if test="params.onelevel != null">
+            AND (t.PARENT_ID='0' or
+            EXISTS (SELECT 1 from QKJVIP_ORDER_WAREHOUSE a where t.PARENT_ID = a.id and a.PARENT_ID='0')
+            )
+        </if>
+        <if test="params.warlists!=null">
+            AND t.roots  in
+            <foreach collection="params.warlists" item="item"
+                     index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </sql>
+
+    <sql id="selectMagSql">
+        SELECT a.id,a.HouseName,a.PARENT_ID,bh.HouseName parentname,
+        case when ISNULL(b.Id, '') = '' then -1
+        else b.state end state
+        from qkjvip_order_warehouse a
+        join qkjvip_order_warehouse bh on (a.PARENT_ID=bh.Id)
+        left join qkjvip_order_warepro b on (a.Id = b.wareid and b.Disabled=0)
+        where a.Disabled=0
+        <if test="params.parentId != null and params.parentId.trim() != ''">
+            AND bh.PARENT_ID=#{params.parentId}
+        </if>
+        <if test="params.wareId != null and params.wareId.trim() != ''">
+            AND a.id=#{params.wareId}
+        </if>
+        <if test="params.warestate != null and params.warestate.trim() != ''">
+            <if test="params.warestate == -1">
+                AND ISNULL(b.Id, '') = ''
+            </if>
+            <if test="params.warestate == 0">
+                AND b.state=0
+            </if>
+            <if test="params.warestate == 1">
+                AND (b.state=1 or b.state=2)
+            </if>
+            <if test="params.warestate == 2">
+                AND b.state=3
+            </if>
+        </if>
+
+    </sql>
+
+    <select id="selectMagWarehousePage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        <include refid="selectMagSql"/>
+    </select>
+
+    <select id="queryAllMag" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        <include refid="selectMagSql"/>
+    </select>
+
+    <select id="selectQkjvipOrderWarehousePage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        <include refid="selectSql"/>
+    </select>
+    <sql id="querySelectListSql">
+        <if test="params.proid != null and params.proid.trim() != ''">
+            and ((b.proid=#{params.proid} and b.state=0)
+            )
+        </if>
+        <if test="params.cellphone != null and params.cellphone.trim() != ''">
+            and EXISTS (
+            SELECT * from qkjwine_r_info winfo where winfo.wareporid = b.Id and winfo.disable=0
+            and (isnull(winfo.scenephone,'')='' or winfo.scenePhone=#{params.cellphone})
+            )
+        </if>
+        <if test="params.wareidlist !=null">
+            AND a.id not in
+            <foreach item="status" collection="params.wareidlist.split(',')" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+    </sql>
+
+    <select id="queryAllStock" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        SELECT * from Func_GetAllParentWares(#{params.proid})
+        where htype=0
+    </select>
+
+<!--    or not EXISTS (SELECT c.wareid from qkjvip_order_warepro c where a.id = c.wareid and  c.Disabled=0   )-->
+    <select id="querySelectList" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        select * from (
+        SELECT a.*,b.id wareproid,b.proid,b.proname from qkjvip_order_warehouse a
+        left join qkjvip_order_warepro b on (a.id=b.wareid and b.Disabled=0)
+        where a.Disabled=0
+        <include refid="querySelectListSql"/>
+        union all
+        select j.*,'' wareproid,'' proid,'' proid from qkjvip_order_warehouse j where j.Disabled=0 and
+        exists (
+        SELECT a.*,b.id wareproid,b.proid,b.proname from qkjvip_order_warehouse a
+        left join qkjvip_order_warepro b on (a.id=b.wareid and b.Disabled=0)
+        where a.parent_id=j.id and a.Disabled=0
+        <include refid="querySelectListSql"/>
+        )
+        union all
+        select q.*,'' wareproid,'' proid,'' proid from qkjvip_order_warehouse q where q.Disabled=0 and
+        exists (
+        select j.*,'' wareproid,'' proid,'' proid from qkjvip_order_warehouse j where j.Disabled=0 and
+        q.id = j.parent_id and
+        exists (
+        SELECT a.*,b.id wareproid,b.proid,b.proname from qkjvip_order_warehouse a
+        left join qkjvip_order_warepro b on (a.id=b.wareid and b.Disabled=0)
+        where a.parent_id=j.id and a.Disabled=0
+        <include refid="querySelectListSql"/>
+        ))
+        union all
+        select q.*,'' wareproid,'' proid,'' proid from qkjvip_order_warehouse q where q.Disabled=0 and
+        q.parent_id='0'
+        ) a
+        ORDER BY a.Htype,a.PARENT_ID,a.Hindex
+    </select>
+
+    <select id="queryList" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        select * from (SELECT a.* ,
+        ISNULL((SELECT sum(b.num) from qkjvip_order_warepro b where a.Id=b.wareid and b.Disabled=0 GROUP BY b.wareid),0)
+        as pronum,
+        ISNULL((SELECT b.state from qkjvip_order_warepro b where a.Id=b.wareid and b.Disabled=0),0)
+        as prostate
+        FROM qkjvip_order_warehouse a where a.Disabled=0
+        <if test="params.parentId != null and params.parentId.trim() != ''">
+            AND (a.id = '${params.parentId}' OR a.PARENT_ID = '${params.parentId}')
+        </if>
+        union ALL
+        SELECT a.* ,
+        ISNULL((SELECT sum(b.num) from qkjvip_order_warepro b where a.Id=b.wareid and b.Disabled=0 GROUP BY b.wareid),0)
+        as pronum,
+        ISNULL((SELECT b.state from qkjvip_order_warepro b where a.Id=b.wareid and b.Disabled=0),0)
+        as prostate
+        FROM qkjvip_order_warehouse a where a.Disabled=0
+        <if test="params.parentId != null and params.parentId.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_order_warehouse z where z.id=a.PARENT_ID and z.PARENT_ID = '${params.parentId}')
+
+        </if>
+        ) z
+        ORDER BY z.Htype,z.PARENT_ID,z.Hindex
+    </select>
+
+    <!--统计-->
+    <select id="queryStatisticsList" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWarehouseEntity">
+        SELECT isnull(sum(a.price),0) price,sum(a.updaynum) updaynum from (
+            SELECT sum(z.SalePrice) price,sum(z.daytype) updaynum from (SELECT a.SalePrice,
+            case when datediff(DD,o.AFExpireTime,getdate()) &lt;= 30 then 1
+            else 0 end daytype
+             from qkjvip_order_orderdetail a
+            join qkjvip_product_stock b on (a.MOrderId=b.orderid)
+            join qkjvip_order_order o on (a.MOrderId=o.Id)
+            join qkjvip_order_warepro t on (t.proid=a.ProductId and t.wareid=b.WareHouseId)
+            where  t.Disabled = 0 and t.state=1
+            and b.Disabled=0 and a.Disabled=0 and o.Disabled=0 and o.OrderStatus != 60
+            and not EXISTS ( SELECT 1 from qkjvip_order_deliverlog rlog where rlog.OrderId=a.morderId)
+
+            <if test="params.wareidlist !=null">
+                AND b.WareHouseId  in
+                <foreach item="status" collection="params.wareidlist.split(',')" open="(" separator="," close=")">
+                    CONVERT(varchar(50),#{status})
+                </foreach>
+            </if>
+
+            ) z
+            union ALL
+            SELECT sum(price) price, 0 updaynum from qkjcus_order_pro a
+            join qkjvip_order_warepro t on (a.wareproid = t.id)
+            where  t.Disabled = 0 and t.state=2
+            <if test="params.wareidlist !=null">
+                AND t.wareid  in
+                <foreach item="status" collection="params.wareidlist.split(',')" open="(" separator="," close=")">
+                    CONVERT(varchar(50),#{status})
+                </foreach>
+            </if>
+
+            union ALL
+            SELECT sum(p.SalePrice) price, 0 updaynum from qkjvip_order_warepro t
+            join qkjvip_product_product p on (t.proid=p.Id)
+            where t.Disabled = 0 and (t.state=0 or t.state=3)
+            <if test="params.wareidlist !=null">
+                AND t.wareid in
+                <foreach item="status" collection="params.wareidlist.split(',')" open="(" separator="," close=")">
+                    CONVERT(varchar(50),#{status})
+                </foreach>
+            </if>
+            ) a
+    </select>
+
+    <!--更新所属根节点-->
+    <update id="updateRoots">
+		UPDATE a set a.roots=
+        (SELECT id from Func_GetAllParentWaresInfo (a.id) fua
+        where fua.htype=0 )
+        from QKJVIP_ORDER_WAREHOUSE a
+	</update>
+</mapper>

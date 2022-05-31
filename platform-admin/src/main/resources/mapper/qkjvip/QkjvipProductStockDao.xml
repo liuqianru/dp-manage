@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipProductStockDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        T.WAREHOUSEID,
+        T.HOUSENAME,
+        T.PRODUCTID,
+        T.PRODUCTNAME,
+        T.PRODUCTCOUNT,
+        T.WARNINGCOUNT,
+        T.INTOTALCOUNT,
+        T.REMARK,
+        T.DISABLED,
+        T.CREATOR,
+        T.CREATEON,
+        t.orderid,
+        (SELECT sum(isnull(d.ProductNum,0)) from qkjvip_order_deliverlog d where d.Disabled=0 and
+        d.OrderId=t.orderid and d.WareHouseId=t.WareHouseId group by d.ProductId) as outtotalcount,
+        (SELECT sum(od.Quantity) from qkjvip_order_orderdetail od where od.Disabled=0 and od.MOrderId=t.orderid
+        and od.ProductId=t.productid	) as detailnum
+        FROM QKJVIP_PRODUCT_STOCK T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.orderid != null and params.orderid.trim() != ''">
+            AND T.orderid = '${params.orderid}'
+        </if>
+        <if test="params.productid != null and params.productid.trim() != ''">
+            AND T.ProductId = #{params.productid}
+        </if>
+    </sql>
+
+    <sql id="selectSqlStock">
+        SELECT T.HouseName,T.WareHouseId,sum(t.InTotalCount) InTotalCount,sum(t.OutTotalCount) OutTotalCount
+        from qkjvip_product_stock T
+		join qkjvip_order_order o on (T.orderid = o.id)
+        where T.Disabled=0 and o.Disabled=0 and o.OrderType=5 and T.InTotalCount>T.OutTotalCount
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND o.MemberName LIKE '%${params.membername}%'
+        </if>
+        <if test="params.cellphone != null and params.cellphone.trim() != ''">
+            AND o.CellPhone = '${params.cellphone}'
+        </if>
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND t.ProductName like '%${params.productname}%'
+        </if>
+        <if test="params.annualfeestate != null">
+            <if test="params.annualfeestate == 1"><!--即将过期-->
+                and DATEDIFF(day, GETDATE(), o.AFExpireTime) &lt; 180
+            </if>
+            <if test="params.annualfeestate == 2"><!--已过期-->
+                and DATEDIFF(day, GETDATE(), o.AFExpireTime) &lt; =0
+            </if>
+        </if>
+        GROUP BY T.HouseName,T.WareHouseId
+    </sql>
+
+    <select id="selectQkjvipProductStockNumDetail" resultType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+        SELECT a.annualfee,a.afexpiretime,a.crm_memberid memberid,b.ProductId,b.ProductName,c.HouseName,
+        case when ISNULL(m.real_name, 'null')='null' or m.real_name=''
+        then m.member_name
+        else m.real_name end as membername,sum(c.InTotalCount) InTotalCount,sum(c.OutTotalCount) OutTotalCount
+        from qkjvip_order_order a
+        join qkjvip_order_orderdetail b on (a.Id=b.MOrderId)
+        join qkjvip_member m on (m.member_id=a.crm_memberid)
+        JOIN qkjvip_product_stock c on (c.orderid=a.Id and b.ProductId=c.ProductId)
+        where a.OrderType=5 and a.Disabled=0 and b.Disabled=0 and c.InTotalCount>c.OutTotalCount
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND a.MemberName LIKE '%${params.membername}%'
+        </if>
+        <if test="params.cellphone != null and params.cellphone.trim() != ''">
+            AND a.CellPhone = '${params.cellphone}'
+        </if>
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND c.ProductName like '%${params.productname}%'
+        </if>
+        <if test="params.annualfeestate != null">
+            <if test="params.annualfeestate == 1"><!--即将过期-->
+                and DATEDIFF(day, GETDATE(), a.AFExpireTime) &lt; 180
+            </if>
+            <if test="params.annualfeestate == 2"><!--已过期-->
+                and DATEDIFF(day, GETDATE(), a.AFExpireTime) &lt; =0
+            </if>
+        </if>
+        GROUP BY a.afexpiretime,a.annualfee,b.ProductId,b.ProductName,c.Id,c.HouseName,a.crm_memberid,m.member_name,m.real_name,c.InTotalCount,c.OutTotalCount
+
+    </select>
+
+    <select id="selectQkjvipProductStockPage" resultType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectQkjvipProductStockNumPage" resultType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+        <include refid="selectSqlStock"/>
+    </select>
+
+    <select id="queryAllStockNum" resultType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+        <include refid="selectSqlStock"/>
+    </select>
+    <delete id="deleteBatchByOrder">
+        DELETE FROM QKJVIP_PRODUCT_STOCK WHERE orderid = #{morderid}
+    </delete>
+    <!--转移-->
+    <update id="updateShiftOrderStock" parameterType="com.platform.modules.qkjvip.entity.QkjvipProductStockEntity">
+		UPDATE QKJVIP_PRODUCT_STOCK SET WareHouseId = #{warehouseid}
+		where orderid=#{orderid} and ProductId=#{productid} and Disabled=0
+	</update>
+</mapper>

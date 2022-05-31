@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberImportDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.MEMBER_ID,
+        T.MEMBER_NAME,
+        T.REAL_NAME,
+        T.MOBILE,
+        T.EMAIL,
+        T.SEX,
+        T.AGE,
+        T.BIRTHDAY,
+        T.MEMBER_TYPE,
+        T.MEMBER_NATURE,
+        T.MEMBER_LEVEL,
+        T.MEMBER_SOURCE,
+        T.INDUSTRY_TYPE,
+        T.UNIT_PROPERTY,
+        T.COMPANY_NAME,
+        T.JOB_TITLE,
+        T.REG_TIME,
+        T.REFERRER_DEPT,
+        T.REFERRER,
+        T.ORG_NO,
+        T.ORG_USERID,
+        T.IS_CUSTOMERS,
+        T.INTEGRAL,
+        T.REALTOTALPRICE,
+        T.SHOPNAME,
+        T.OPENID,
+        T.HEAD_IMG_URL,
+        T.ADD_USER,
+        T.ADD_DEPT,
+        T.ADD_TIME,
+        T.MEMBER_LABEL,
+        T.AMOUNT1,
+        T.AMOUNT3,
+        T.AMOUNT6,
+        T.AMOUNT12,
+        T.BUYNUM1,
+        T.BUYNUM3,
+        T.BUYNUM6,
+        T.BUYNUM12,
+        T.UNITPRICE,
+        T.LASTBUYDATE,
+        T.IDCARD,
+        T.OFFLINEFLAG,
+        T.ISUNSUBSCRIBE,
+        T.UNSUBSCRIBETIME,
+        T.SERVICENAME,
+        T.LANGUAGE,
+        T.CITY,
+        T.PROVINCE,
+        T.COUNTRY,
+        T.SUBSCRIBETIME,
+        T.UNIONID,
+        T.UPDATETIME,
+        T.APPID,
+        T.REMARK,
+        T.REMARK2,
+        T.ISFAIL,
+        T.CRM_MEMBERID,
+        T.MEMBERCHANNEL
+        FROM QKJVIP_MEMBER_IMPORT T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberImportPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberImportEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberImportEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <!--根据手机号查询判断是否有数据：孙珊珊-->
+    <select id="selectMemberByMobile" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberImportEntity">
+        SELECT TOP 1 member_id from qkjvip_member_import where mobile=#{params.mobile}
+    </select>
+</mapper>

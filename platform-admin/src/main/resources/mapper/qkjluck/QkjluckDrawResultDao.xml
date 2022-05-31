@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjluck.dao.QkjluckDrawResultDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,i.name,i.sub_name,i.prizetakentype,i.prizetakenpathresult,i.takedate
+        FROM QKJLUCK_DRAW_RESULT T
+        join qkjluck_draw_acitiityitem i on (i.id=t.item_id)
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND T.ACTIVITY_ID = '${params.activityId}'
+        </if>
+        <if test="params.unionid != null and params.unionid.trim() != ''">
+            AND T.unionid = '${params.unionid}'
+        </if>
+        <if test="params.everyday != null and params.everyday.trim() != ''">
+            AND t.addtime BETWEEN '${params.everyday} 00:00:00' and '${params.everyday} 23:59:59'
+        </if>
+        <if test="params.productid != null and params.productid.trim() != ''">
+            AND i.prizetakenpath = '${params.productid}'
+        </if>
+        <if test="params.itemid != null and params.itemid.trim() != ''">
+            AND i.id = '${params.itemid}'
+        </if>
+        <if test="params.pronum != null">
+            AND i.pronum = #{params.pronum}
+        </if>
+        <if test="params.num != null">
+            AND T.num = #{params.num}
+        </if>
+        <if test="params.isluckresult != null and params.isluckresult.trim() != ''">
+            AND i.prizetakenpath!=''
+        </if>
+    </sql>
+
+    <select id="selectQkjluckDrawResultPage" resultType="com.platform.modules.qkjluck.entity.QkjluckDrawResultEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjluck.entity.QkjluckDrawResultEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <update id="updateByPama" parameterType="com.platform.modules.qkjluck.entity.QkjluckDrawResultEntity">
+		UPDATE QKJLUCK_DRAW_RESULT SET num = 1 WHERE activity_id = #{activityId} and unionid = #{unionid} and item_id=#{itemId} and num = 0
+	</update>
+</mapper>

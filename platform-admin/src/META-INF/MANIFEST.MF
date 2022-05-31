@@ -1,0 +1,69 @@
+Manifest-Version: 1.0
+Main-Class: com.platform.PlatformAdminApplication
+Class-Path: batik-awt-util-1.7.jar druid-1.1.10.jar shiro-config-core-1.
+ 4.0.jar jjwt-0.9.1.jar batik-parser-1.7.jar jboss-logging-3.3.2.Final.j
+ ar json-20140107.jar log4j-to-slf4j-2.11.1.jar kaptcha-0.0.9.jar juel-i
+ mpl-2.2.7.jar jackson-annotations-2.9.0.jar spring-context-support-5.1.
+ 4.RELEASE.jar sqljdbc4-4.2.jar byte-buddy-1.9.7.jar javax.annotation-ap
+ i-1.3.2.jar batik-codec-1.7.jar springfox-swagger-common-2.9.2.jar jul-
+ to-slf4j-1.7.25.jar shiro-core-1.4.0.jar commons-fileupload-1.3.3.jar a
+ ctiviti-spring-boot-starter-basic-6.0.0.jar spring-orm-5.1.4.RELEASE.ja
+ r xml-apis-1.4.01.jar spring-boot-starter-logging-2.1.2.RELEASE.jar shi
+ ro-crypto-hash-1.4.0.jar ojdbc6-11.2.0.3.jar batik-svg-dom-1.7.jar xmlg
+ raphics-commons-1.2.jar shiro-spring-1.4.0.jar batik-css-1.7.jar batik-
+ gvt-1.7.jar spring-boot-starter-web-2.1.2.RELEASE.jar commons-lang-2.6.
+ jar junit-4.12.jar javaGeom-0.11.1.jar logstash-logback-encoder-5.1.jar
+  qiniu-java-sdk-7.2.27.jar tomcat-embed-core-9.0.14.jar springfox-schem
+ a-2.9.2.jar batik-script-1.7.jar guava-20.0.jar mybatis-plus-3.1.0.jar 
+ activiti-image-generator-6.0.0.jar commons-beanutils-1.9.3.jar poi-4.0.
+ 0.jar juel-api-2.2.7.jar shiro-crypto-cipher-1.4.0.jar batik-ext-1.7.ja
+ r mapstruct-1.2.0.Final.jar batik-svggen-1.7.jar mchange-commons-java-0
+ .2.11.jar spring-boot-2.1.2.RELEASE.jar commons-io-1.1.jar spring-expre
+ ssion-5.1.4.RELEASE.jar easypoi-web-4.0.0.jar classmate-1.4.0.jar commo
+ ns-collections4-4.2.jar shiro-web-1.4.0.jar batik-util-1.7.jar spring-c
+ ore-5.1.4.RELEASE.jar spring-boot-starter-aop-2.1.2.RELEASE.jar mybatis
+ -3.5.0.jar weixin-java-mp-3.4.0.jar fastjson-1.2.47.jar druid-spring-bo
+ ot-starter-1.1.10.jar spring-boot-starter-json-2.1.2.RELEASE.jar okhttp
+ -3.14.4.jar fop-0.94.jar httpclient-4.5.6.jar log4j-api-2.11.1.jar spri
+ ng-boot-starter-jdbc-2.1.2.RELEASE.jar hibernate-validator-6.0.14.Final
+ .jar spring-web-5.1.4.RELEASE.jar slf4j-api-1.7.25.jar jdom-1.1.jar jsq
+ lparser-1.4.jar springfox-swagger2-2.9.2.jar jackson-datatype-jdk8-2.9.
+ 8.jar httpcore-4.4.10.jar juel-spi-2.2.7.jar xmlpull-1.1.3.1.jar spring
+ -tx-5.1.4.RELEASE.jar avalon-framework-impl-4.3.1.jar joda-time-2.10.1.
+ jar shiro-config-ogdl-1.4.0.jar activiti-dmn-api-6.0.0.jar swagger-mode
+ ls-1.5.20.jar activiti-engine-6.0.0.jar easypoi-annotation-4.0.0.jar ba
+ tik-transcoder-1.7.jar weixin-java-common-3.4.0.jar xml-apis-ext-1.3.04
+ .jar spring-boot-autoconfigure-2.1.2.RELEASE.jar gson-2.8.5.jar commons
+ -email-1.4.jar tomcat-embed-websocket-9.0.14.jar commons-collections-3.
+ 2.1.jar commons-compress-1.18.jar aliyun-sdk-oss-2.8.3.jar xmlbeans-3.0
+ .1.jar spring-beans-5.1.4.RELEASE.jar httpmime-4.5.6.jar activiti-form-
+ model-6.0.0.jar shiro-cache-1.4.0.jar quartz-2.3.0.jar commons-codec-1.
+ 11.jar mybatis-plus-core-3.1.0.jar velocity-tools-2.0.jar mybatis-sprin
+ g-2.0.0.jar mybatis-plus-boot-starter-3.1.0.jar curvesapi-1.04.jar acti
+ viti-form-api-6.0.0.jar okio-1.17.2.jar batik-bridge-1.7.jar commons-va
+ lidator-1.3.1.jar hamcrest-core-1.3.jar mysql-connector-java-8.0.13.jar
+  aspectjweaver-1.9.2.jar commons-lang3-3.8.1.jar javax.mail-1.6.2.jar l
+ ombok-1.18.4.jar springfox-core-2.9.2.jar javassist-3.20.0-GA.jar activ
+ iti-process-validation-6.0.0.jar springfox-spring-web-2.9.2.jar jackson
+ -datatype-jsr310-2.9.8.jar jackson-core-2.9.8.jar mybatis-plus-annotati
+ on-3.1.0.jar batik-dom-1.7.jar jackson-databind-2.9.8.jar validation-ap
+ i-2.0.1.Final.jar velocity-1.7.jar filters-2.0.235.jar commons-configur
+ ation-1.10.jar activiti-dmn-model-6.0.0.jar tomcat-embed-el-9.0.14.jar 
+ spring-plugin-core-1.2.0.RELEASE.jar easypoi-base-4.0.0.jar poi-ooxml-4
+ .0.0.jar spring-boot-starter-tomcat-2.1.2.RELEASE.jar HikariCP-3.2.0.ja
+ r commons-dbcp-1.4.jar spring-jdbc-5.1.4.RELEASE.jar avalon-framework-a
+ pi-4.3.1.jar commons-pool2-2.6.0.jar xalan-2.6.0.jar spring-boot-starte
+ r-2.1.2.RELEASE.jar spring-webmvc-5.1.4.RELEASE.jar swagger-annotations
+ -1.5.20.jar activiti-bpmn-converter-6.0.0.jar shiro-lang-1.4.0.jar ognl
+ -3.2.6.jar spring-plugin-metadata-1.2.0.RELEASE.jar activiti-json-conve
+ rter-6.0.0.jar activiti-spring-6.0.0.jar batik-js-1.7.jar shiro-event-1
+ .4.0.jar springfox-spi-2.9.2.jar activiti-bpmn-model-6.0.0.jar jackson-
+ module-parameter-names-2.9.8.jar jedis-2.9.1.jar commons-digester-1.8.j
+ ar spring-jcl-5.1.4.RELEASE.jar shiro-crypto-core-1.4.0.jar batik-xml-1
+ .7.jar commons-logging-1.0.4.jar jcl-over-slf4j-1.7.25.jar xstream-1.4.
+ 10.jar xpp3_min-1.1.4c.jar poi-ooxml-schemas-4.0.0.jar cos_api-4.4.jar 
+ batik-anim-1.7.jar logback-classic-1.2.3.jar mybatis-plus-extension-3.1
+ .0.jar commons-pool-1.6.jar activation-1.1.1.jar snakeyaml-1.23.jar spr
+ ing-context-5.1.4.RELEASE.jar dom4j-2.1.1.jar logback-core-1.2.3.jar sp
+ ring-aop-5.1.4.RELEASE.jar
+

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.MemberCommuDao">
+	<select id="selectMemberCommuList" resultType="com.platform.modules.qkjvip.entity.MemberCommuEntity">
+		SELECT mc.* FROM qkjvip_member_commu mc
+		WHERE 1=1
+		<if test="params.uuid != null and params.uuid != ''">
+			AND mc.uuid = #{params.uuid}
+		</if>
+<!--		<if test="params.memberId != null and params.memberId != ''">-->
+<!--			AND mc.member_id = #{params.memberId}-->
+<!--		</if>-->
+		<if test="params.mobile != null and params.mobile != ''">
+			AND mc.mobile = #{params.mobile}
+		</if>
+	</select>
+</mapper>

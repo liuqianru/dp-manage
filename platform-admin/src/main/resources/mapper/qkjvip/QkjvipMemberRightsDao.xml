@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberRightsDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJVIP_MEMBER_RIGHTS T
+        WHERE T.DISABLED = 0
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.sort != null and params.sort.trim() != ''">
+            order by ${params.sort}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberRightsPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryByGroup" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsEntity">
+        SELECT DISTINCT T.MEMBERLEVEL, T.MEMBERLEVELNAME,T.RightValue FROM QKJVIP_MEMBER_RIGHTS T
+        ORDER BY T.MEMBERLEVEL ASC
+    </select>
+
+    <update id="updateByMemberlevel" parameterType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsEntity">
+		UPDATE QKJVIP_MEMBER_RIGHTS SET RightValue = #{rightvalue} WHERE MEMBERLEVEL = #{memberlevel}
+	</update>
+</mapper>

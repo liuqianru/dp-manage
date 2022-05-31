@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberRightsConfigDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_MEMBER_RIGHTS_CONFIG T
+        WHERE 1=1
+        <if test="params.memberlevelname != null and params.memberlevelname.trim() != ''">
+            AND T.MEMBERLEVELNAME LIKE '%${params.memberlevelname}%'
+        </if>
+        <if test="params.memberlevel != null and params.memberlevel != ''">
+            AND T.MEMBERLEVEL = #{params.memberlevel}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberRightsConfigPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsConfigEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRightsConfigEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

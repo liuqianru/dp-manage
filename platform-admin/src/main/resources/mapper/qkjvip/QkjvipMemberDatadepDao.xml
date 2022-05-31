@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberDatadepDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_MEMBER_DATADEP T
+        WHERE T.Disabled = 0
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND T.MemberId = #{params.memberId}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberDatadepPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberDatadepEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberDatadepEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

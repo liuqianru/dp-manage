@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjcus.dao.QkjcusOrderDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJCUS_ORDER T
+        WHERE 1=1
+        <if test="params.memberName != null and params.memberName.trim() != ''">
+            AND T.member_name LIKE '%${params.memberName}%'
+        </if>
+        <if test="params.listorgno != null and params.listorgno.trim() != ''">
+            AND (EXISTS (
+            SELECT 1 from sys_user u where u.user_id=t.add_user
+            and u.org_no in
+                <foreach collection="params.listorgno.split(',')" item="item" index="index" open="(" close=")"
+                         separator=",">CONVERT(varchar(50),#{item})
+                </foreach>
+            )
+        <if test="params.addUser != null and params.addUser.trim() != ''">
+        or t.add_user = #{params.addUser}
+        </if>
+            or
+            EXISTS (
+                SELECT * from qkjvip_member m
+                join qkjvip_member_datadep datdep on (m.member_id=datdep.MemberId or m.memberidto=datdep.MemberId)
+                where m.member_id=t.member_id and datdep.OrgNo in
+                <foreach collection="params.listorgno.split(',')" item="item" index="index" open="(" close=")" separator=",">
+                CONVERT(varchar(50),#{item})
+                </foreach>
+            )
+            )
+        </if>
+
+    </sql>
+
+    <select id="selectQkjcusOrderPage" resultType="com.platform.modules.qkjcus.entity.QkjcusOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjcus.entity.QkjcusOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

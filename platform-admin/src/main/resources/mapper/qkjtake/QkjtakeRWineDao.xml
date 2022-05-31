@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjtake.dao.QkjtakeRWineDao">
+
+    <sql id="selectSql">
+        SELECT t.*,p.Disabled isout,p.proname,
+        wh.HouseName,p.proid,p.wareid,p.Id wareproid,o.wdata
+        from qkjtake_r_wine t
+        join qkjwine_r_info o on (t.Id=o.takeid)
+        join qkjvip_order_warepro p on (o.wareporid = p.id)
+        join qkjvip_order_warehouse wh on (wh.Id = p.wareid)
+        WHERE 1=1
+        <if test="params.id != null and params.id.trim() != ''">
+            AND T.Id = #{params.id}
+        </if>
+        <if test="params.wineid != null and params.wineid.trim() != ''">
+            AND t.wineid = #{params.wineid}
+        </if>
+
+        <if test="params.orderid != null and params.orderid.trim() != ''">
+            AND t.orderid = #{params.orderid}
+        </if>
+
+        <if test="params.wareporid != null and params.wareporid.trim() != ''">
+            AND o.wareporid = #{params.wareporid}
+        </if>
+        <if test="params.productid != null and params.productid.trim() != ''">
+            AND p.proid = #{params.productid}
+        </if>
+        <if test="params.warehouseid != null and params.warehouseid.trim() != ''">
+            AND p.wareid = #{params.warehouseid}
+        </if>
+        <if test="params.warlists!=null">
+            AND wh.roots  in
+            <foreach collection="params.warlists" item="item"
+                     index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="params.state!=null and params.state.trim() != ''">
+            AND t.state= #{params.state}
+        </if>
+    </sql>
+
+    <select id="selectQkjtakeRWinePage" resultType="com.platform.modules.qkjtake.entity.QkjtakeRWineEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjtake.entity.QkjtakeRWineEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <!-- 更新提货状态 -->
+    <update id="updateTakeStateById" parameterType="com.platform.modules.qkjtake.entity.QkjtakeRWineEntity">
+		UPDATE t set t.state=#{state},
+		t.operator=#{operator},
+		t.operationtime=#{operationtime}
+        from qkjtake_r_wine t
+        join qkjwine_r_info o on (t.Id=o.takeid)
+        join qkjvip_order_warepro p on (o.wareporid = p.id)
+        where p.Disabled=0
+        <if test="proid != null and proid.trim() != '' and wareid != null and wareid.trim() != ''">
+            and p.proid=#{proid} and p.wareid=#{wareid}
+        </if>
+        <if test="wareproid != null and wareproid.trim() != ''">
+            and p.id=#{wareproid}
+        </if>
+
+	</update>
+
+    <!-- 更新提货信息 -->
+    <update id="updateTakeByWareproid" parameterType="com.platform.modules.qkjtake.entity.QkjtakeRWineEntity">
+        UPDATE t set t.orderid=#{orderid},
+        t.ordertype=#{ordertype},
+        t.memberid=#{memberid},
+        t.membername=#{membername}
+        from qkjtake_r_wine t
+        join qkjwine_r_info o on (t.Id=o.takeid)
+        join qkjvip_order_warepro p on (o.wareporid = p.id)
+        where p.Disabled=0
+        <if test="proid != null and proid.trim() != '' and wareid != null and wareid.trim() != ''">
+            and p.proid=#{proid} and p.wareid=#{wareid}
+        </if>
+        <if test="wareproid != null and wareproid.trim() != ''">
+            and p.id=#{wareproid}
+        </if>
+
+    </update>
+
+    <!-- 更新提货状态 -->
+    <update id="updateStateById" parameterType="string">
+		UPDATE qkjtake_r_wine set state=2  WHERE id = #{value}
+	</update>
+</mapper>

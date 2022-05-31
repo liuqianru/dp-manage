@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberVisitGivedetailDao">
+
+    <sql id="selectSql">
+        SELECT T.*, ISNULL(u.real_name, u.member_name) membername
+        FROM QKJVIP_MEMBER_VISIT_GIVEDETAIL T
+        LEFT JOIN Func_GetNewestMemberInfo() u ON (T.memberId = u.member_id)
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainId = #{params.mainid}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberVisitGivedetailPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberVisitGivedetailEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberVisitGivedetailEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryByMainId" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberMessageUserQueryEntity">
+        SELECT DISTINCT u.member_id, u.openid, u.mobile
+        FROM QKJVIP_MEMBER_VISIT_GIVEDETAIL T  WITH(NOLOCK)
+        LEFT JOIN Func_GetNewestMemberInfo() u ON (T.memberid = u.member_id)
+        where T.mainId = #{value}
+    </select>
+
+    <delete id="deleteByMainId">
+        DELETE FROM QKJVIP_MEMBER_VISIT_GIVEDETAIL WHERE mainId = #{value}
+    </delete>
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/processdef">
+  <process id="process" isExecutable="true">
+    <startEvent id="flowo">
+      <extensionElements>
+        <activiti:executionListener event="start" class="/qkj/rorder/checkstate"></activiti:executionListener>
+      </extensionElements>
+    </startEvent>
+    <userTask id="folw2" name="确认订单"></userTask>
+    <sequenceFlow id="sid-EC1CB45E-FB75-4339-8C7F-DAF8E3964C46" sourceRef="folw2"></sequenceFlow>
+    <endEvent id="folw3" name="结束"></endEvent>
+    <sequenceFlow id="flow5" sourceRef="folw2" targetRef="folw3"></sequenceFlow>
+    <sequenceFlow id="flow1" name="开始" sourceRef="flowo"></sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_process">
+    <bpmndi:BPMNPlane bpmnElement="process" id="BPMNPlane_process">
+      <bpmndi:BPMNShape bpmnElement="flowo" id="BPMNShape_flowo">
+        <omgdc:Bounds height="30.0" width="30.0" x="60.0" y="55.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="folw2" id="BPMNShape_folw2">
+        <omgdc:Bounds height="80.0" width="100.0" x="135.0" y="15.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="folw3" id="BPMNShape_folw3">
+        <omgdc:Bounds height="28.0" width="28.0" x="280.0" y="41.0"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow5" id="BPMNEdge_flow5">
+        <omgdi:waypoint x="235.0" y="55.0"></omgdi:waypoint>
+        <omgdi:waypoint x="280.0" y="55.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

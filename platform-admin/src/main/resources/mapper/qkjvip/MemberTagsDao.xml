@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.MemberTagsDao">
+    <delete id="removeByTagId">
+        DELETE FROM qkjvip_member_tags WHERE tag_id = #{value}
+    </delete>
+
+    <delete id="deleteBatch">
+        DELETE FROM qkjvip_member_tags WHERE member_id IN
+        <foreach item="memberId" collection="array" open="(" separator="," close=")">
+            #{memberId}
+        </foreach>
+    </delete>
+
+    <delete id="mdyBatch">
+        UPDATE qkjvip_member_tags
+        SET tag_locktype = 1
+        WHERE id IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </delete>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.MemberTagsEntity">
+        SELECT mt.* FROM qkjvip_member_tags mt WHERE mt.tag_locktype &lt;&gt; 1
+        <if test="params.memberId != null and params.memberId != ''">
+            AND mt.member_id = #{params.memberId}
+        </if>
+        <if test="params.tagValue != null and params.tagValue != ''">
+            AND mt.tag_value = #{params.tagValue}
+        </if>
+    </select>
+
+    <select id="queryTagsList" resultType="com.platform.modules.qkjvip.entity.MemberTagsEntity">
+		SELECT
+            a.member_id,
+            a.tag_group_id,
+            d.name as tagGroupName,
+            a.tag_value,
+            d.tag_type,
+            d.optionType,
+            a.tag_value_text,
+            stuff(
+                (
+                    SELECT DISTINCT
+                        ',' + tag_id
+                    FROM
+                        qkjvip_member_tags with(nolock)
+                    WHERE
+                        a.member_id = member_id AND a.tag_group_id = tag_group_id AND tag_locktype &lt;&gt; 1 FOR xml path ('')
+                ),
+                1,
+                1,
+                ''
+            ) items
+        FROM
+            qkjvip_member_tags a with(nolock)
+        LEFT JOIN sys_dict d ON (a.tag_group_id=d.id)
+        WHERE a.tag_locktype &lt;&gt; 1 and a.member_id = #{params.memberId}
+        ORDER BY d.tag_type,a.tag_group_id
+	</select>
+</mapper>

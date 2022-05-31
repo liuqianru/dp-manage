@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipQuestionnaireDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_QUESTIONNAIRE T
+        WHERE 1=1
+        <if test="params.title != null and params.title.trim() != ''">
+            AND T.title LIKE '%${params.title}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipQuestionnairePage" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="ExcelList" resultType="com.platform.modules.qkjvip.entity.QkjvipQuestionnaireExcelEntity">
+        SELECT
+        q.topic,
+        zh.nickname,
+        r.unionId,
+        r.addTime,
+        r.perOption,
+        r.perContent,
+        zh.ServiceName
+        FROM
+        qkjvip_questionnaire_record r
+        LEFT JOIN qkjvip_questionnaire_question q ON ( r.questionId= q.id )
+        LEFT JOIN (
+        SELECT
+        u.nickname,
+        u.mobile,
+        w.unionid,
+        o.*
+        FROM
+        tydmall.[dbo].[bma_users] u
+        INNER JOIN tydmall.[dbo].[bma_WeChatUser] w ON u.wxid= w.id
+        AND w.disabled= 0
+        INNER JOIN tydmall.[dbo].[bma_officialchannel] o ON u.channel= o.memberchannel
+        AND o.disabled= 0
+        AND u.specialstorecode= o.channel
+        WHERE
+        u.disabled= 0
+        AND u.channel != 100
+        AND o.servicename LIKE '%个人%'
+        ) zh ON ( r.unionId= zh.unionid )
+        WHERE
+        1 = 1
+        <if test="params.title != null and params.title.trim() != ''">
+            and  r.mainId in (select id from qkjvip_questionnaire where  title LIKE '%${params.title}%')
+        </if>
+        ORDER BY
+        r.unionId
+    </select>
+</mapper>

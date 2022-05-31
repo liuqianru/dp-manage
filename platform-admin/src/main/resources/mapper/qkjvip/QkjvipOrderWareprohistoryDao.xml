@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderWareprohistoryDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJVIP_ORDER_WAREPROHISTORY T
+        WHERE T.Disabled=0
+        <if test="params.wareid != null and params.wareid.trim() != ''">
+            AND T.wareid = #{params.wareid}
+        </if>
+    </sql>
+
+    <sql id="selectMagSql">
+        SELECT a.*,o.AnnualFee,o.AFExpireTime,
+        CASE when a.state = 1 then  o.memberName
+        when a.state = 4 then o.MemberName
+        when a.state = 6 then (SELECT cus.member_name from qkjcus_order_out outo
+        join qkjcus_order cus on (cus.id=outo.instockid) where outo.id=a.orderid)
+        when a.state=2 then cuso.member_name
+        end as membername,
+        CASE when a.state = 1 then  o.CellPhone
+        when a.state = 4 then o.CellPhone
+        when a.state = 6 then (SELECT cus.mobile from qkjcus_order_out outo
+        join qkjcus_order cus on (cus.id=outo.instockid) where outo.id=a.orderid)
+        when a.state=2 then cuso.mobile end as mobile,
+        case when (a.state = 10 or a.state = 11) then
+        (SELECT wha.HouseName from qkjvip_order_warehouse wha where wha.id=a.Remark)
+        else '' end as remarkname
+
+        from qkjvip_order_wareprohistory a
+        left join qkjvip_order_order o on (o.id=a.orderid and (a.state=1 or a.state=4))
+        left join qkjcus_order cuso on (cuso.Id = a.orderid and a.state=2)
+        WHERE a.Disabled=0
+        <if test="params.parentId != null and params.parentId.trim() != ''">
+            AND
+            EXISTS (
+            SELECT 1 from qkjvip_order_warehouse z
+            join qkjvip_order_warehouse zz on (z.PARENT_ID=zz.Id)
+            where z.id=a.wareid and zz.PARENT_ID = '${params.parentId}')
+        </if>
+
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND (EXISTS (
+            SELECT 1 from qkjvip_order_order ordr
+            join qkjvip_product_stock sto on (ordr.Id=sto.orderid) where sto.WareHouseId=a.wareid
+            and ordr.MemberName like '%${params.membername}%'
+            )
+            OR
+            EXISTS (
+            SELECT * from qkjcus_order ordr2
+            join qkjcus_order_pro p on (ordr2.id=p.mainid)
+            join qkjvip_order_warepro wp on (p.wareproid=wp.id)
+            where wp.wareid = a.wareid and ordr2.member_name like '%${params.membername}%'
+            )
+            )
+        </if>
+        <if test="params.cellphone != null and params.cellphone.trim() != ''">
+            AND (EXISTS (
+            SELECT 1 from qkjvip_order_order ordr
+            join qkjvip_product_stock sto on (ordr.Id=sto.orderid) where sto.WareHouseId=a.wareid
+            and ordr.CellPhone =#{params.cellphone}
+            )
+            OR
+            EXISTS (
+            SELECT * from qkjcus_order ordr2
+            join qkjcus_order_pro p on (ordr2.id=p.mainid)
+            join qkjvip_order_warepro wp on (p.wareproid=wp.id)
+            where wp.wareid = a.wareid and ordr2.mobile =#{params.cellphone}
+            )
+            )
+        </if>
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND (EXISTS (
+            SELECT 1 from qkjvip_order_order ordr
+            join qkjvip_product_stock sto on (ordr.Id=sto.orderid) where sto.WareHouseId=a.wareid
+            and sto.ProductName like '%${params.productname}%'
+            )
+            OR
+            EXISTS (
+            SELECT * from qkjcus_order ordr2
+            join qkjcus_order_pro p on (ordr2.id=p.mainid)
+            join qkjvip_order_warepro wp on (p.wareproid=wp.id)
+            where wp.wareid = a.wareid and wp.proname like '%${params.productname}%'
+            )
+            )
+        </if>
+        <if test="params.stardate != null and params.stardate.trim() != ''">
+            AND a.CreateOn >= #{params.stardate} + ' 00:00:00'
+        </if>
+        <if test="params.enddate != null and params.enddate.trim() != ''">
+            AND  a.CreateOn  &lt; = #{params.enddate} + ' 23:59:59'
+        </if>
+        <if test="params.orderytype != null and params.orderytype.trim() != ''">
+            <if test="params.orderytype == 0">
+                AND (a.state=1 or a.state=4)
+            </if>
+            <if test="params.orderytype == 1">
+                AND (a.state=2 or a.state=6)
+            </if>
+        </if>
+
+        order by a.createon DESC
+    </sql>
+
+    <select id="selectQkjvipOrderWareprohistoryPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareprohistoryEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareprohistoryEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryMagAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareprohistoryEntity">
+        <include refid="selectMagSql"/>
+    </select>
+</mapper>

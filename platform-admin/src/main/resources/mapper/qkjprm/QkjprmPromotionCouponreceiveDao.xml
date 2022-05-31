@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjprm.dao.QkjprmPromotionCouponreceiveDao">
+
+    <sql id="selectSql">
+        SELECT
+        *
+        FROM QKJPRM_PROMOTION_COUPONRECEIVE T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.date!=null">
+            and convert(nvarchar(20),T.CREATETIME,111) = convert(nvarchar(20),#{params.date},111)
+        </if>
+        <if test="params.unionid!=null and params.unionid.trim()!=''">
+            and t.unionid=#{params.unionid}
+        </if>
+        <if test="params.couponid!=null and params.couponid.trim()!=''">
+            and t.couponid=#{params.couponid}
+        </if>
+    </sql>
+
+    <select id="selectQkjprmPromotionCouponreceivePage"
+            resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponreceiveEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponreceiveEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="getCouponCount" resultType="int">
+        select count(1)
+        from [qkjprm_promotion_couponreceive] r
+        inner join [qkjprm_promotion_coupon] c
+        on r.couponid=c.id
+        left join [qkjprm_promotion_couponexchange] e
+        on e.couponreceiveid=r.id
+        where r.unionid=#{params.unionid}
+        <choose>
+            <!-- status 0 所有 1 已过期  2 已使用  3 有效 -->
+            <when test="params.status!=null and params.status==1">
+                and Convert(nvarchar(20),getdate(),111)>Convert(nvarchar(20),r.CreateTime,111)
+                and e.id is null
+            </when>
+            <when test="params.status!=null and params.status==2">
+                and e.id is not null
+            </when>
+            <when test="params.status!=null and params.status==3">
+                and Convert(nvarchar(20),r.CreateTime,111)>=Convert(nvarchar(20),getdate(),111)
+                and e.id is null
+            </when>
+        </choose>
+    </select>
+
+    <select id="getCouponList" resultType="com.platform.modules.qkjprm.domain.CouponInfo">
+        select r.id couponsn,r.couponamount,Convert(datetime,Convert(nvarchar(20),r.CreateTime,111),20) validdate,c.couponname,c.productid,c.productname,
+        case when e.id is null then 0 else 1 end isexchange ,
+        case when Convert(nvarchar(20),r.CreateTime,111)>=Convert(nvarchar(20),getdate(),111) then 1 else 0 end isvalid,
+        r.isdouble
+        from [qkjprm_promotion_couponreceive] r
+        inner join [qkjprm_promotion_coupon] c
+        on r.couponid=c.id
+        left join [qkjprm_promotion_couponexchange] e
+        on e.couponreceiveid=r.id
+        where r.unionid=#{params.unionid}
+        <choose>
+        <!-- status 0 所有 1 已过期  2 已使用  3 有效 -->
+            <when test="params.status!=null and params.status==1">
+                and Convert(nvarchar(20),getdate(),111)>Convert(nvarchar(20),r.CreateTime,111)
+                and e.id is null
+                order by r.createtime desc
+            </when>
+            <when test="params.status!=null and params.status==2">
+                and e.id is not null
+                order by e.createtime desc
+            </when>
+            <when test="params.status!=null and params.status==3">
+                and Convert(nvarchar(20),r.CreateTime,111)>=Convert(nvarchar(20),getdate(),111)
+                and e.id is null
+                order by r.createtime desc
+            </when>
+            <otherwise>
+                order by r.createtime desc
+            </otherwise>
+        </choose>
+        <if test="params.pageindex!=null and params.pagesize!=null">
+            offset ( (#{params.pageindex}-1) * #{params.pagesize} ) rows fetch next #{params.pagesize} rows only
+        </if>
+    </select>
+</mapper>

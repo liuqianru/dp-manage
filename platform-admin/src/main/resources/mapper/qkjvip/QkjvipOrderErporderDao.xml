@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderErporderDao">
+
+    <sql id="selectSql">
+        SELECT T.OrderCode,T.orderdate,T.buycompanyname,T.departmentname,T.salesman,T.remark from qkjvip_order_erporder T
+        WHERE t.Disabled=0
+        <if test="params.ordercode != null and params.ordercode.trim() != ''">
+            AND T.ordercode = '${params.ordercode}'
+        </if>
+        <if test="params.isnotcrmorder != null and params.isnotcrmorder.trim() != ''">
+            AND (T.MOrderId is null or T.MOrderId='')
+        </if>
+        <if test="params.ordertype != null">
+            AND t.OrderType = #{params.ordertype}
+        </if>
+
+        GROUP BY T.OrderCode,T.orderdate,T.buycompanyname,T.departmentname,T.salesman,T.remark
+    </sql>
+
+    <sql id="selectSqlDetail">
+        SELECT T.* from qkjvip_order_erporder T
+        WHERE t.Disabled=0
+        <if test="params.ordercode != null and params.ordercode.trim() != ''">
+            AND T.ordercode = '${params.ordercode}'
+        </if>
+        <if test="params.isnotcrmorder != null and params.isnotcrmorder.trim() != ''">
+            AND (T.MOrderId is null or T.MOrderId='')
+        </if>
+        <if test="params.ordertype != null">
+            AND t.OrderType = #{params.ordertype}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipOrderErporderPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderErporderEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderErporderEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="queryAllDetail" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderErporderEntity">
+        <include refid="selectSqlDetail"/>
+    </select>
+</mapper>

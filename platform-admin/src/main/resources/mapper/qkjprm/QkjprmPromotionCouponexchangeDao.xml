@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjprm.dao.QkjprmPromotionCouponexchangeDao">
+
+    <sql id="selectSql">
+        SELECT
+        *
+        FROM QKJPRM_PROMOTION_COUPONEXCHANGE T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.couponsn!=null and params.couponsn.trim()!=''">
+            and t.CouponReceiveId=#{params.couponsn}
+        </if>
+        <if test="params.marketcode!=null and params.marketcode.trim()!=''">
+            and t.MarketCode=#{params.marketcode}
+        </if>
+        <if test="params.exchangeresult!=null">
+            and t.ExchangeResult=#{params.exchangeresult}
+        </if>
+        <if test="params.date!=null">
+            and convert(nvarchar(20),T.CREATETIME,111) = convert(nvarchar(20),#{params.date},111)
+        </if>
+        <if test="params.unionid!=null and params.unionid.trim()!=''">
+            and t.UserUnionid=#{params.unionid}
+        </if>
+    </sql>
+
+    <select id="selectQkjprmPromotionCouponexchangePage"
+            resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponexchangeEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjprm.entity.QkjprmPromotionCouponexchangeEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <!-- 获取扫码的用户unionid-->
+    <select id="getScanUnion" resultType="String">
+        select unionid from qkjvip_member_scancode_new
+        where bottlecode=#{value}
+    </select>
+
+</mapper>

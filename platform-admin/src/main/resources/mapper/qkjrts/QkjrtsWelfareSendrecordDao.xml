@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrts.dao.QkjrtsWelfareSendrecordDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,ISNULL(m.member_name, m.real_name) membername,m.mobile,m.job_title jobtitle,m.company_name companyname,m.sex,m.age,org_userid orguserid,m.referrer
+        FROM QKJRTS_WELFARE_SENDRECORD T
+        INNER JOIN Func_GetNewestMemberInfo() m ON (T.memberid=m.member_id)
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainid = #{params.mainid}
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND (m.member_id = #{params.memberid} or m.memberidto = #{params.memberid})
+        </if>
+        <if test="params.welfaretype != null and params.welfaretype.trim() != ''">
+            AND T.welfaretype = #{params.welfaretype}
+        </if>
+        <if test="params.welfarename != null and params.welfarename.trim() != ''">
+            AND T.welfarename LIKE '%${params.welfarename}%'
+        </if>
+        <if test="params.scenetype != null">
+            AND T.scenetype = #{params.scenetype}
+        </if>
+        <if test="params.fromqrtz != null and params.fromqrtz == 1">
+            AND YEAR(T.SendTime) = YEAR(GETDATE())
+        </if>
+        <if test="params.currentuserid != null and params.currentuserid.trim() != ''">
+            AND (m.add_user = #{params.currentuserid} OR m.referrer = #{params.currentuserid}
+            OR EXISTS (
+            SELECT 1 FROM qkjvip_member_orguser u
+            WHERE u.Disabled=0 AND (u.MemberId=m.member_id or u.MemberId=m.memberidto) AND u.UserId=#{params.currentuserid}
+            )
+            <if test="params.listorgno != null and params.listorgno.trim() != ''">
+                OR EXISTS (
+                SELECT 1 FROM qkjvip_member_datadep d
+                WHERE d.Disabled=0 AND (d.MemberId=m.member_id or d.MemberId=m.memberidto)
+                AND d.OrgNo in
+                <foreach item="orgno" collection="params.listorgno.split(',')" open="(" separator="," close=")">
+                    #{orgno}
+                </foreach>
+                )
+            </if>
+            )
+        </if>
+    </sql>
+
+    <select id="selectQkjrtsWelfareSendrecordPage" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareSendrecordEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareSendrecordEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="getWelfareList" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareSendrecordEntity">
+        SELECT T.*
+        FROM QKJRTS_WELFARE_SENDRECORD T
+        INNER JOIN qkjvip_member m ON (T.memberid=m.member_id)
+        WHERE T.status = 0 and (T.EndValidDate >= GETDATE() OR T.WelfareType = 2)
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainid = #{params.mainid}
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND (m.member_id = #{params.memberid} or m.memberidto = #{params.memberid})
+        </if>
+    </select>
+
+    <update id="setWelfareStatus">
+        update QKJRTS_WELFARE_SENDRECORD
+        set status = 1
+        WHERE id IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

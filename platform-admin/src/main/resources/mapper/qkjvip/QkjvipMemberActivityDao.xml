@@ -1,0 +1,453 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberActivityDao">
+
+    <sql id="selectReport">
+        SELECT summary.atype,sum(summary.sessionnum) sessionnum, sum(summary.totalprice) totalprice from (
+        SELECT apt.atype,count(1) sessionnum,sum(apt.totalprice) totalprice from (
+        SELECT a.atype,(SELECT sum(b.totalPrice) from qkjvip_member_activitymaterial b  where a.id = b.activity_id)
+        as totalprice
+        from qkjvip_member_activity a
+        where a.islayer!=0
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  a.addtime >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  a.addtime  &lt; = #{params.endregtime}
+        </if>
+        <if test="params.alevelarea != null and params.alevelarea.trim() != ''">
+            AND  a.alevelarea = #{params.alevelarea}
+        </if>
+        <if test="params.blevelarea != null and params.blevelarea.trim() != ''">
+            AND  a.blevelarea = #{params.blevelarea}
+        </if>
+        <if test="params.clevelarea != null and params.clevelarea.trim() != ''">
+            AND  a.clevelarea = #{params.clevelarea}
+        </if>
+        <if test="params.loginuser != null and params.loginuser.trim() != ''">
+            AND (a.inchargeuser = '${params.loginuser}' OR a.adduser = '${params.loginuser}'
+            <if test="params.listorgno != null and params.listorgno.trim() != ''">
+                OR a.inchargedept in ( #{params.listorgno} )
+            </if>
+            )
+        </if>
+        ) apt GROUP BY  apt.atype
+        union all
+        SELECT 10 atype,0 sessionnum,sum(vm.totalPrice) totalprice  from qkjvip_member_visit_material vm
+        where ISNULL(vm.totalprice,0)!=0
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  vm.add_time >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  vm.add_time  &lt; = #{params.endregtime}
+        </if>
+        <if test="params.alevelarea != null and params.alevelarea.trim() != ''">
+            and EXISTS (
+            SELECT 1 from qkjvip_member_visit a
+            join Func_GetNewestMemberInfo() b on (b.member_id=a.member_id)
+            where vm.visit_id=a.id and b.areaone = #{params.alevelarea}
+            )
+        </if>
+        <if test="params.blevelarea != null and params.blevelarea.trim() != ''">
+            and EXISTS (
+            SELECT 1 from qkjvip_member_visit a
+            join Func_GetNewestMemberInfo() b on (b.member_id=a.member_id)
+            where vm.visit_id=a.id and b.AreaTwo = #{params.blevelarea}
+            )
+        </if>
+        <if test="params.clevelarea != null and params.clevelarea.trim() != ''">
+            and EXISTS (
+            SELECT 1 from qkjvip_member_visit a
+            join Func_GetNewestMemberInfo() b on (b.member_id=a.member_id)
+            where vm.visit_id=a.id and b.AreaThree = #{params.clevelarea}
+            )
+        </if>
+        <if test="params.loginuser != null and params.loginuser.trim() != ''">
+            AND (vm.add_user = '${params.loginuser}' OR vm.add_user = '${params.loginuser}'
+            <if test="params.listorgno != null and params.listorgno.trim() != ''">
+                OR vm.add_dept in ( ${params.listorgno} )
+            </if>
+            )
+        </if>
+        ) summary GROUP BY summary.atype
+    </sql>
+
+    <sql id="selectSql">
+        SELECT
+        T.*,u.REAL_NAME realname,
+        ISNULL((SELECT count(distinct mb.member_id) from qkjvip_member_activitymbs mb where mb.activity_id=t.id group by mb.activity_id), 0)
+        as activeper,
+        ISNULL((SELECT count(distinct am.memberid) from qkjvip_member_activitymaterial am where am.activity_id=t.id and
+        EXISTS (
+        SELECT 1 from qkjvip_member_activitymbs mym where mym.activity_id=am.activity_id and mym.member_id=am.memberid
+        ) and
+         am.recestate=1 group by am.activity_id), 0)
+        as acceptper,
+        (SELECT count(1) from qkjvip_member_signup sgn
+        where sgn.acitvity_id=t.id group by sgn.acitvity_id
+        ) as signper,
+        (
+        SELECT sum(mb.totalPrice) from qkjvip_member_activitymaterial mb where mb.activity_id=t.id GROUP BY mb.activity_id
+        ) as totelprice
+        <if test="params.istoexcel != null and params.istoexcel.trim() != ''">
+            ,act.NAME atypename,alact.NAME alevename,blact.NAME blevename,clact.NAME clevename
+        </if>
+        FROM QKJVIP_MEMBER_ACTIVITY T
+        join sys_user u on (u.USER_ID=t.adduser)
+        <if test="params.istoexcel != null and params.istoexcel.trim() != ''">
+            left join sys_dict act on (act.[VALUE]=t.atype and act.GROUP_ID='80220ada3f10ddfafafa8d520763852c')
+            left join sys_dict alact on (alact.[VALUE]=t.alevelarea and alact.GROUP_ID='d78784e9c1ab22e68107d13970cc3547')
+            left join sys_dict blact on (blact.[VALUE]=t.blevelarea and blact.GROUP_ID='bb091c12be2b8b804be7bee7ec18ad32')
+            left join sys_dict clact on (clact.[VALUE]=t.clevelarea and clact.GROUP_ID='a50b7268f25bf60e750f9562cfd28028')
+        </if>
+        WHERE 1=1
+        <include refid="selectSqlWhere"></include>
+    </sql>
+    
+    <sql id="selectSqlWhere">
+        <if test="params.title != null and params.title.trim() != ''">
+            AND T.title LIKE '%${params.title}%'
+        </if>
+        <if test="params.id != null and params.id.trim() != ''">
+            AND T.id = '${params.id}'
+        </if>
+        <if test="params.isoutsider1 != null and params.isoutsider1.trim() != ''"><!--查询所有公开活动-->
+            AND (T.ispri = 0
+            <if test="params.isoutsideruser != null and params.isoutsideruser.trim() != ''">
+                or t.adduser = '${params.isoutsideruser}'
+            </if>
+            or
+            EXISTS (
+            SELECT 1 from qkjvip_member_activityshop s where s.activity_id=t.id and s.org_id=#{params.isoutsider1}
+            )
+            )
+        </if>
+        <if test="params.starDate != null and params.starDate.trim() != ''">
+            AND  t.star_date >= #{params.starDate}
+        </if>
+        <if test="params.selectmain != null and params.selectmain.trim() != ''">
+            AND  EXISTS (
+            SELECT 1 from qkjvip_member_activityshop s where s.activity_id=t.id and s.org_id=#{params.selectmain}
+            )
+        </if>
+        <if test="params.endDate != null and params.endDate.trim() != ''">
+            AND  t.end_date  &lt; = #{params.endDate}
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        <if test="params.noislayer != null">
+            and t.islayer !=#{params.noislayer}
+        </if>
+        <if test="params.iskol != null">
+            and t.atype !=#{params.iskol}
+        </if>
+        <if test="params.isexcel != null">
+            and t.isexcel=#{params.isexcel}
+        </if>
+        <if test="params.atype != null  and params.atype.trim() != ''">
+            and t.atype=#{params.atype}
+        </if>
+        <if test="params.selecttype != null  and params.selecttype.trim() != ''">
+            and t.atype=#{params.selecttype}
+        </if>
+        <if test="params.alevelarea != null  and params.alevelarea.trim() != ''">
+            and t.alevelarea=#{params.alevelarea}
+        </if>
+        <if test="params.blevelarea != null  and params.blevelarea.trim() != ''">
+            and t.blevelarea=#{params.blevelarea}
+        </if>
+        <if test="params.clevelarea != null  and params.clevelarea.trim() != ''">
+            and t.clevelarea=#{params.clevelarea}
+        </if>
+        <if test="params.inchargeuser != null  and params.inchargeuser.trim() != ''">
+            and t.inchargeuser=#{params.inchargeuser}
+        </if>
+        <if test="params.loginuser != null and params.loginuser.trim() != ''">
+            AND (t.inchargeuser = '${params.loginuser}' OR t.adduser = '${params.loginuser}'
+            <if test="params.listorgno != null and params.listorgno.trim() != ''">
+                OR t.inchargedept in
+                <foreach collection="params.listorgno.split(',')" item="item" index="index" open="(" close=")"
+                         separator=",">CONVERT(varchar(50),#{item})
+                </foreach>
+                or t.adddept in
+                <foreach collection="params.listorgno.split(',')" item="item" index="index" open="(" close=")"
+                         separator=",">CONVERT(varchar(50),#{item})
+                </foreach>
+
+            </if>
+            )
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_member_signupmember b where b.activity_id=T.id and b.member_id=#{params.memberId})
+        </if>
+        <if test="params.memberIdSign != null and params.memberIdSign.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_member_signup b where b.acitvity_id=T.id and b.memberid=#{params.memberIdSign})
+        </if>
+        <if test="params.memberIdSignAddress != null and params.memberIdSignAddress.trim() != ''">
+            OR (not EXISTS (SELECT 1 from qkjvip_member_signup b where b.acitvity_id=T.id and b.memberid=#{params.memberIdSign})
+            and  EXISTS (SELECT 1 from qkjvip_member_signupaddress adres
+            where adres.activityid=t.id and adres.address like '%${params.memberIdSignAddress}%')
+            )
+        </if>
+    </sql>
+
+    <sql id="selectSqlSignAddress">
+        select * ,
+        (SELECT top 1 address from qkjvip_member_signupaddress a where a.activityid=act.id) as addressstr
+        from (SELECT *,
+        case when ISNULL((
+        SELECT top 1 sme.id from qkjvip_member_signupmember sme
+        left outer join [dbo].[qkjvip_member] b on sme.member_id=b.member_id
+        where sme.activity_id=t.id
+        and
+        EXISTS(
+        select 1 from qkjvip_member c
+        where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+        and c.member_id='${params.memberIdSign}'
+        )
+        ),'')='' then 0
+        else 1 end as istake
+
+        from QKJVIP_MEMBER_ACTIVITY t
+        where 1=1
+
+        <if test="params.memberIdSign != null and params.memberIdSign.trim() != ''">
+            AND
+            EXISTS (SELECT 1 from qkjvip_member_signup s
+            left join [dbo].[qkjvip_member] b on (s.memberid=b.member_id)
+            where s.acitvity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            )
+        </if>
+        <if test="params.topClassShow != null and params.topClassShow.trim() != ''">
+            <if test="params.topClassShow.trim() == 1"> <!--进行中-->
+                and (t.star_date + ' 00:00:00') &lt;= GETDATE()
+                and (t.end_date + ' 23:59:59') >= GETDATE()
+            </if>
+            <if test="params.topClassShow.trim() == 3"> <!--已结束-->
+                and (t.end_date + ' 23:59:59') &lt; GETDATE()
+            </if>
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        union all
+        SELECT *,2 istake from QKJVIP_MEMBER_ACTIVITY t
+        where 1=1
+        <if test="params.memberIdSign != null and params.memberIdSign.trim() != ''">
+            AND (not EXISTS (SELECT 1 from qkjvip_member_signup s
+            left join [dbo].[qkjvip_member] b on (s.memberid=b.member_id)
+            where s.acitvity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            )
+            )
+
+        </if>
+
+        <if test="params.topClassShow != null and params.topClassShow.trim() != ''">
+            <if test="params.topClassShow.trim() == 1"> <!--进行中-->
+                and (t.star_date + ' 00:00:00') &lt;= GETDATE()
+                and (t.end_date + ' 23:59:59') >= GETDATE()
+            </if>
+            <if test="params.topClassShow.trim() == 3"> <!--已结束-->
+                and (t.end_date + ' 23:59:59') &lt; GETDATE()
+            </if>
+        </if>
+
+        <if test="params.ispri != null">
+            AND (T.ispri = 0
+            or EXISTS (
+            SELECT 1 from qkjvip_member_activitymbs s
+            left join qkjvip_member b on (s.member_id=b.member_id)
+            where s.activity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            ))
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        <if test="params.memberIdSignAddress != null and params.memberIdSignAddress.trim() != ''">
+            and EXISTS (SELECT 1 from qkjvip_member_signupaddress adres
+            where adres.activityid=t.id and adres.address like '%${params.memberIdSignAddress}%')
+        </if>
+        ) act
+    </sql>
+
+    <sql id="selectSqlCount">
+        SELECT t.*,
+        (SELECT ISNULL(sum(1), 0) from qkjvip_member_activitymbs m where m.activity_id=t.id) as mbsnum,
+        (SELECT ISNULL(sum(1), 0) from qkjvip_member_signup s where s.acitvity_id=t.id ) as signupnum,
+        (SELECT ISNULL(sum(1), 0) from qkjvip_member_signupmember sm where sm.activity_id=t.id ) as smnum
+        from qkjvip_member_activity t where 1=1
+
+        <if test="params.title != null and params.title.trim() != ''">
+            AND T.title LIKE '%${params.title}%'
+        </if>
+        <if test="params.id != null and params.id.trim() != ''">
+            AND T.NAME = '${params.id}'
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_member_signupmember b where b.activity_id=T.id and b.member_id=#{params.memberId})
+        </if>
+    </sql>
+
+    <sql id="selectSqlSignAddressMain">
+        select * from (
+        SELECT t.*,
+        case when ISNULL((
+        SELECT top 1 sme.id from qkjvip_member_signupmember sme
+        left outer join [dbo].[qkjvip_member] b on sme.member_id=b.member_id
+        where sme.activity_id=t.id
+        and
+        EXISTS(
+        select 1 from qkjvip_member c
+        where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+        and c.member_id='${params.memberIdSign}'
+        )
+        ),'')='' then 0
+        else 1 end as istake,
+        (SELECT top 1 address from qkjvip_member_signupaddress a where a.activityid=t.id) as addressstr
+        from qkjvip_member_activity t where 1=1
+        <if test="params.memberIdSign != null and params.memberIdSign.trim() != ''">
+            and
+            EXISTS (SELECT 1 from qkjvip_member_signup s
+            left join [dbo].[qkjvip_member] b on (s.memberid=b.member_id)
+            where s.acitvity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            )
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        union all
+        SELECT t.*,2 istake,
+        (SELECT top 1 address from qkjvip_member_signupaddress a where a.activityid=t.id) as addressstr
+        from qkjvip_member_activity t where 1=1
+        <if test="params.memberIdSign != null and params.memberIdSign.trim() != ''">
+            and EXISTS (
+            SELECT 1 from qkjvip_member_activitymbs s
+            left join qkjvip_member b on (s.member_id=b.member_id)
+            where s.activity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            ) and not EXISTS (SELECT 1 from qkjvip_member_signup s
+            left join [dbo].[qkjvip_member] b on (s.memberid=b.member_id)
+            where s.acitvity_id=t.id
+            and EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberIdSign}'
+            )
+            )
+        </if>
+        <if test="params.islayer != null">
+            and t.islayer=#{params.islayer}
+        </if>
+        ) act order by act.end_date desc
+    </sql>
+
+    <select id="selectQkjvipMemberActivityPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectQkjvipMemberActivityPageCount" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectSqlCount"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAllSignAddress" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectSqlSignAddress"/>
+    </select>
+
+    <select id="queryAllSignAddressmain" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectSqlSignAddressMain"/>
+    </select>
+
+    <select id="queryAllReport" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        <include refid="selectReport"/>
+    </select>
+
+    <select id="queryCount" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityAccountEntity">
+        <choose>
+            <when test="params.countType != null and params.countType != '' and params.countType == 1">
+                SELECT
+                COUNT (1) planTotalNum,COUNT (distinct mb.member_id) planNum
+                FROM
+                qkjvip_member_activitymbs mb
+                LEFT JOIN QKJVIP_MEMBER_ACTIVITY T ON (mb.activity_id = t.id)
+                WHERE 1=1
+            </when>
+            <otherwise>
+                SELECT
+                COUNT(1) acceptTotalNum,COUNT(distinct mb.member_id) acceptNum
+                FROM
+                qkjvip_member_activitymaterial am
+                LEFT JOIN QKJVIP_MEMBER_ACTIVITY T ON (am.activity_id = t.id)
+                LEFT JOIN qkjvip_member_activitymbs mb ON (mb.activity_id=am.activity_id and mb.member_id=am.memberid)
+                WHERE am.recestate=1
+            </otherwise>
+        </choose>
+        <include refid="selectSqlWhere"></include>
+    </select>
+
+    <select id="actityisexist" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivityEntity">
+        SELECT * from (
+            SELECT
+                    top 1 T.*
+                    FROM QKJVIP_MEMBER_ACTIVITY T
+                    join sys_user u on (u.USER_ID=t.adduser)
+                    WHERE 1=1 and t.atype in (1)  and t.ispri =0
+        and DATEDIFF(day, t.end_date, GETDATE()) &lt;=0
+            ORDER BY t.end_date desc ,t.addtime desc
+            ) a
+            union all
+            SELECT * from (
+            SELECT
+                    top 1 T.*
+                    FROM QKJVIP_MEMBER_ACTIVITY T
+                    join sys_user u on (u.USER_ID=t.adduser)
+                    WHERE 1=1 and t.atype in (4)  and t.ispri =0
+                    and DATEDIFF(day, t.end_date, GETDATE()) &lt;=0
+            ORDER BY t.end_date desc ,t.addtime desc
+            ) b
+
+            union all
+            SELECT * from (
+            SELECT
+                    top 1 T.*
+                    FROM QKJVIP_MEMBER_ACTIVITY T
+                    join sys_user u on (u.USER_ID=t.adduser)
+                    WHERE 1=1 and t.atype in (6) and t.ispri =0
+                    and DATEDIFF(day, t.end_date, GETDATE()) &lt;=0
+            ORDER BY t.end_date desc ,t.addtime desc
+            ) b
+
+    </select>
+</mapper>

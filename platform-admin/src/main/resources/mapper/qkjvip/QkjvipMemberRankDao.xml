@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberRankDao">
+
+    <sql id="rankWhere">
+        <choose>
+            <when test="params.ranktype==1">
+                and scantime>=DATEADD(mm,DATEDIFF(mm,0,getdate()),0)
+            </when>
+            <when test="params.ranktype==2">
+                and scantime>=DATEADD(yy,DATEDIFF(yy,0,getdate()),0)
+            </when>
+            <when test="params.ranktype==3">
+                and createtime>=DATEADD(mm,DATEDIFF(mm,0,getdate()),0)
+            </when>
+            <when test="params.ranktype==4">
+                and createtime>=DATEADD(yy,DATEDIFF(yy,0,getdate()),0)
+            </when>
+        </choose>
+
+    </sql>
+    <!--获取扫码、签到排行榜 -->
+    <select id="getRankList" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRankEntity">
+        select row_number() over(order by [rank] desc )RowNum, [RecordId] ,[UnionId] ,[MemberId]
+        ,[RankType] ,[Rank] ,[CreateTime] ,[LastUpdate]
+        ,case  when [MemberName]='匿名用户' then [MemberName]
+               when len([MemberName])=0 then '匿名用户'
+	           when len([MemberName])>2 then left([MemberName],2)+'***'
+	           else  left([MemberName],1)+'***' end  [MemberName]
+      ,isnull([HeadImg],'https://static1.zhongjiuyun.com/icon_images/blue_logo.png')[HeadImg]
+        from [dbo].[qkjvip_member_memberrank]
+        where ranktype=#{params.ranktype}
+        order by [rank] desc
+        OFFSET 0 ROW FETCH NEXT #{params.pagesize} rows only
+    </select>
+    <!--获取青稞粒排行榜 -->
+    <select id="getIntegralRank" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRankEntity">
+        select row_number() over(order by [rank] desc )RowNum, mr.[RecordId]
+        ,mr.[UnionId],mr.[MemberId],mr.[RankType],mr.[Rank],mr.[CreateTime]
+        ,mr.[LastUpdate],mb.member_level memberlevel
+        ,case when mr.[MemberName]='匿名用户' then mr.[MemberName]
+                when len([MemberName])=0 then '匿名用户'
+	            when len(mr.[MemberName])>2 then left(mr.[MemberName],2)+'***'
+	            else  left(mr.[MemberName],1)+'***' end  [MemberName]
+        ,isnull(mr.[HeadImg],'https://static1.zhongjiuyun.com/icon_images/blue_logo.png') [HeadImg]
+        from [dbo].[qkjvip_member_memberrank] mr
+        inner join [dbo].[qkjvip_member] mb
+        on mr.memberid=mb.member_id and statusflag=0
+        where ranktype=0
+        order by mb.member_level desc,[rank] desc
+        OFFSET 0 ROW FETCH NEXT #{value} rows only
+    </select>
+    <!--获取用户扫码次数 -->
+    <select id="getUserScanCode" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRankEntity">
+        select jr.crm_memberid memberid,jr.unionid,jr.username memberName,jr.headimgurl headimg,#{params.ranktype}
+        ranktype,
+        (select count(1) scannum from [qkjvip_member_scancode] where unionid=#{params.unionid}
+        <include refid="rankWhere"></include>
+        )[rank]
+        from [qkjvip_member_jueru] jr
+        inner join [qkjvip_member] mb
+        on jr.crm_memberid=mb.member_id and jr.memberchannel=18 and jr.disabled=0 and statusflag=0
+        where jr.crm_memberid=#{params.memberid}
+    </select>
+    <!--获取用户签到次数 -->
+    <select id="getUserSignin" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberRankEntity">
+        select jr.crm_memberid memberid,jr.unionid,jr.username memberName,jr.headimgurl headimg,#{params.ranktype}
+        ranktype,
+        (select count(1) signinnum from [dbo].[qkjvip_member_integrallog]
+        where memberchannel=18 and actiontype=105 and disabled=0 and memberid=#{params.memberid}
+        <include refid="rankWhere"></include>
+        )[rank]
+        from [qkjvip_member_jueru] jr
+        inner join [qkjvip_member] mb
+        on jr.crm_memberid=mb.member_id and jr.memberchannel=18 and jr.disabled=0 and statusflag=0
+        where jr.crm_memberid=#{params.memberid}
+    </select>
+    <!--获取排行榜前有多少人 -->
+    <select id="getUserTopRank" resultType="int">
+        select
+        <choose>
+            <when test="params.ranktype==1">
+                sum(scanmonthnum) as num
+            </when>
+            <when test="params.ranktype==2">
+                sum(scanyearthnum) as num
+            </when>
+            <when test="params.ranktype==3">
+                sum(signinmonthnum) as num
+            </when>
+            <otherwise>
+                sum(signinyearnum) as num
+            </otherwise>
+        </choose>
+        from [dbo].[qkjvip_member_rankstatistic]
+        where actioncount >#{params.ranknum}
+    </select>
+
+    <!--更新积分排行榜 -->
+    <select id="updateIntegralRank" statementType="CALLABLE">
+        exec [dbo].[up_member_integralrank]
+    </select>
+    <!--更新扫码排行榜 -->
+    <select id="updateScanRank" statementType="CALLABLE">
+        exec [dbo].[up_member_scanrank]
+    </select>
+    <!--更新签到排行榜 -->
+    <select id="updateSigninRank" statementType="CALLABLE">
+        exec [dbo].[up_member_signinrank]
+    </select>
+    <!--更新扫码排行榜 -->
+    <select id="updateScanStatic" statementType="CALLABLE">
+        exec [dbo].[up_member_scanrankstatic]
+    </select>
+    <!--更新签到排行榜 -->
+    <select id="updateSigninStatic" statementType="CALLABLE">
+        exec [dbo].[up_member_signinrankstatic]
+    </select>
+
+</mapper>

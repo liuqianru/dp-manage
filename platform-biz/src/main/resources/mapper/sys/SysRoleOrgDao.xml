@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.sys.dao.SysRoleOrgDao">
+
+    <delete id="deleteByRoleId">
+        DELETE FROM SYS_ROLE_ORG WHERE ROLE_ID = #{roleId}
+    </delete>
+    <delete id="deleteBatch">
+        DELETE FROM SYS_ROLE_ORG WHERE ROLE_ID IN
+        <foreach item="roleId" collection="array" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+    <select id="queryOrgNoList" resultType="string">
+		SELECT ORG_NO FROM SYS_ROLE_ORG WHERE ROLE_ID = #{value}
+	</select>
+
+    <select id="queryOrgNoListByUserId" resultType="string">
+		SELECT ORG_NO FROM SYS_ROLE_ORG WHERE ROLE_ID IN (SELECT ROLE_ID FROM SYS_USER_ROLE WHERE USER_ID =  #{value})
+	</select>
+
+    <select id="queryOrgNoListByUserIdAndPerm" parameterType="map" resultType="string">
+		SELECT ORG_NO FROM SYS_ROLE_ORG WHERE ROLE_ID IN (SELECT DISTINCT UR.role_id FROM SYS_USER_ROLE UR
+        LEFT JOIN SYS_ROLE_MENU RM ON UR.ROLE_ID = RM.ROLE_ID
+        LEFT JOIN SYS_MENU M ON RM.MENU_ID = M.MENU_ID
+        WHERE 1=1
+        <if test="userId != null and userId.trim() != ''">
+            AND UR.USER_ID = #{userId}
+        </if>
+        <if test="userPerm != null and userPerm.trim() != ''">
+            AND M.PERMS LIKE '%${userPerm}%'
+        </if>
+        )
+	</select>
+
+
+    <select id="queryOrgNoIsselect" resultType="com.platform.modules.sys.entity.SysRoleOrgEntity">
+        SELECT case when b.orgnoselect=0 then o.ORG_NO
+        ELSE b.orgnoselect end ORG_NO,b.ordertype from sys_role_menu a
+        join sys_role b on (a.ROLE_ID=b.ROLE_ID)
+        left join sys_role_org o on (b.ROLE_ID=o.ROLE_ID)
+        where 1=1
+
+        <if test="params.userId != null and params.userId.trim() != ''">
+            AND
+            EXISTS (
+            SELECT 1 from sys_user_role r where r.role_id=a.ROLE_ID and r.user_id='${params.userId}'
+            )
+        </if>
+        <if test="params.userPerm != null and params.userPerm.trim() != ''">
+            AND EXISTS (
+            SELECT 1 from sys_menu m where m.menu_id=a.MENU_ID and m.perms like '%${params.userPerm}%'
+            )
+        </if>
+    </select>
+</mapper>

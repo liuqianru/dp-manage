@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjservice.dao.QkjserviceMemberSupportDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        T.MEMBERID,
+        T.MEMBERNAME,
+        T.TITLE,
+        T.CONTENT,
+        T.PRICE,
+        T.REMARK,
+        T.ADDTIME,
+        T.ADDUSER
+        FROM QKJSERVICE_MEMBER_SUPPORT T
+        WHERE 1=1
+        <if test="params.title != null and params.title.trim() != ''">
+            AND T.title LIKE '%${params.title}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjserviceMemberSupportPage" resultType="com.platform.modules.qkjservice.entity.QkjserviceMemberSupportEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjservice.entity.QkjserviceMemberSupportEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipContentDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_CONTENT T
+        WHERE 1=1
+        <if test="params.title != null and params.title.trim() != ''">
+            AND T.TITLE LIKE '%${params.title}%'
+        </if>
+    </sql>
+
+    <sql id="selectSqlOther">
+        SELECT T.*,g.sortvalue FROM QKJVIP_CONTENT T
+        INNER JOIN QKJVIP_CONTENT_GROUPCONTENT g ON (t.id=g.contentid)
+        WHERE g.groupid = #{value}
+        ORDER BY g.sortvalue ASC
+    </sql>
+
+    <select id="selectQkjvipContentPage" resultType="com.platform.modules.qkjvip.entity.QkjvipContentEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipContentEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="queryByGroupId" resultType="com.platform.modules.qkjvip.entity.QkjvipContentEntity">
+        <include refid="selectSqlOther"/>
+    </select>
+</mapper>

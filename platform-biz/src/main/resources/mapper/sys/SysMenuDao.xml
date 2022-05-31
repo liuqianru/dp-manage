@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.sys.dao.SysMenuDao">
+
+	<select id="queryNotButtonList" resultType="com.platform.modules.sys.entity.SysMenuEntity">
+		SELECT MENU_ID,PARENT_ID,NAME,URL,PERMS,TYPE,ICON,ORDER_NUM FROM SYS_MENU WHERE TYPE != 2 ORDER BY ORDER_NUM ASC
+	</select>
+
+	<select id="queryList" resultType="com.platform.modules.sys.entity.SysMenuEntity">
+		SELECT A.*,B.NAME PARENT_NAME FROM SYS_MENU A LEFT JOIN SYS_MENU B ON A.PARENT_ID = B.MENU_ID ORDER BY A.MENU_ID,A.ORDER_NUM
+	</select>
+    <select id="queryMaxIdByParentId" resultType="string">
+		SELECT MAX(MENU_ID) FROM SYS_MENU WHERE PARENT_ID = #{parentId}
+	</select>
+
+	<!-- 查询所有权限redis -->
+	<select id="queryAllPermsToRedis" resultType="com.platform.modules.sys.entity.SysMenuEntity">
+		SELECT M.MENU_ID,M.PERMS,UR.USER_ID     -- role.ordertype,role.orglist,role.orgnoselect
+		from SYS_MENU M
+		LEFT JOIN SYS_ROLE_MENU RM on RM.MENU_ID = M.MENU_ID
+		LEFT JOIN SYS_USER_ROLE UR ON UR.ROLE_ID = RM.ROLE_ID
+		left join sys_role role on UR.role_id = role.ROLE_ID
+	</select>
+
+	<!-- 根据菜单id获取菜单列表-->
+	<select id="queryListByMenuId" resultType="com.platform.modules.sys.entity.SysMenuEntity">
+		select * from SYS_MENU where  MENU_ID in
+		<foreach  item="item" collection="list" index="index"  open="(" separator="," close=")">
+			#{item}
+		</foreach>
+		order by ORDER_NUM
+	</select>
+</mapper>

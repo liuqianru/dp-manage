@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjsms.dao.QkjsmsRInfoDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,b.orderid
+        FROM QKJSMS_R_INFO T
+        join qkjwine_r_info b on (t.wineid=b.id)
+        WHERE b.disable=0
+        <if test="params.state != null">
+            AND T.state = #{params.state}
+        </if>
+    </sql>
+
+    <select id="selectQkjsmsRInfoPage" resultType="com.platform.modules.qkjsms.entity.QkjsmsRInfoEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjsms.entity.QkjsmsRInfoEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

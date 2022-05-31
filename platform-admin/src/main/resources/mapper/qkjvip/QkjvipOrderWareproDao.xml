@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderWareproDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,b.HouseName,p.SalePrice,
+        (SELECT top 1 w.scenetime from qkjwine_r_info w where w.wareporid=t.id and isnull(w.scenetime,'') !='') scenetime,
+        (SELECT top 1 w.ftnumber from qkjwine_r_info w where w.wareporid=t.id and isnull(w.ftnumber,'') !='') ftnumber
+        FROM QKJVIP_ORDER_WAREPRO T
+        join qkjvip_order_warehouse b on (t.wareid=b.Id)
+        join qkjvip_product_product p on (t.proid=p.Id)
+        WHERE t.disabled = 0
+        <if test="params.wareid != null and params.wareid.trim() != ''">
+            AND T.wareid = '${params.wareid}'
+        </if>
+    </sql>
+
+    <sql id="selectSqlQueryAll">
+        SELECT * from (SELECT a.proname,a.wareid,a.CreateOn,a.Creator,a.state,c.orderid,p.mainid,
+        case when a.state =1 then o.MemberName
+        else pot.member_name end membername
+        from qkjvip_order_warepro a
+        left join qkjvip_product_stock c on (a.id=c.wareproid)
+        left join qkjvip_order_order o on (c.orderid=o.Id)
+        left join qkjcus_order_pro p on (p.wareproid=a.Id)
+        left join qkjcus_order pot on (pot.id=p.mainid)
+        union all
+        SELECT a.ProductName proname,a.WareHouseId wareid,a.CreateOn,a.Creator, 4 state,
+        a.OrderId,NULL mainid,b.MemberName membername
+        from qkjvip_order_deliverlog a
+        join qkjvip_order_order b on (a.OrderId=b.id)
+        where b.Disabled=0
+        union ALL
+        SELECT p.proname,p.wareid,a.add_time CreateOn,a.add_user Creator,6 state,
+        null orderid,a.instockid mainid,b.member_name membername
+        from qkjcus_order_out a
+        join qkjvip_order_warepro p on (a.wareproid=p.Id)
+        join qkjcus_order b on (a.instockid=b.Id)
+
+        ) t
+        WHERE 1=1
+        <if test="params.wareid != null and params.wareid.trim() != ''">
+            AND T.wareid = '${params.wareid}'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipOrderWareproPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectQkjvipOrderWareproListPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+        <include refid="selectSqlQueryAll"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <update id="updateStateByProAndWare" parameterType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+		UPDATE QKJVIP_ORDER_WAREPRO SET state = #{state} WHERE proid = #{proid} and wareid = #{wareid}
+	</update>
+
+    <update id="updateDisabledByProAndWare" parameterType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+		UPDATE QKJVIP_ORDER_WAREPRO SET disabled = #{disabled} WHERE proid = #{proid} and wareid = #{wareid}
+	</update>
+
+    <!--转移-->
+    <update id="updateShiftWare" parameterType="com.platform.modules.qkjvip.entity.QkjvipOrderWareproEntity">
+		UPDATE QKJVIP_ORDER_WAREPRO SET wareid = #{newwareid}
+		where id=#{id}  and Disabled=0
+	</update>
+</mapper>

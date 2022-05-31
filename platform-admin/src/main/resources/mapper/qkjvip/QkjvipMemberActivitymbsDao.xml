@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberActivitymbsDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        CASE when ISNULL(a.memberidto, 'tt') != 'tt' and a.memberidto != '' then a.memberidto
+        else a.member_id end as MEMBER_ID,
+        T.ACTIVITY_ID,
+        t.status,
+        a.member_name,
+        a.real_name,
+        a.mobile,
+        a.head_img_url,
+        a.ServiceName,
+        a.company_name,
+        a.MemberGroup,
+        a.IdentityLevel,
+        a.org_userid,
+        a.referrer,
+        a.Address,
+        t.memberjson,
+        a.job_title,
+        ISNULL(a.memberidto, a.member_id) memberidto,
+        (SELECT top 1 g.id from qkjvip_member_signup g where g.acitvity_id=t.activity_id and g.memberid=a.member_id) as singtype,
+        (SELECT top 1 1 from qkjvip_member_signupmember g where g.activity_id=t.activity_id and g.member_id=a.member_id) as smemtype
+        FROM QKJVIP_MEMBER_ACTIVITYMBS T
+        join qkjvip_member a on (t.MEMBER_ID=a.member_id)
+        WHERE 1=1  --(a.statusflag = 0 OR a.statusflag = 2)
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND T.ACTIVITY_ID LIKE '%${params.activityId}%'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(a.memberidto,a.member_id)
+            and c.member_id='${params.memberId}'
+            )
+        </if>
+    </sql>
+
+    <sql id="selectSqlCount">
+        SELECT member.real_name,member.member_name,member.mobile,a.*,
+        CASE when activ.isexcel = 1 then 1
+        else
+        case when ISNULL(cc.memberidto, '')='' then 0
+        else 1 end
+        end
+        as bmstatus,
+
+        CASE when activ.isexcel = 1 then 1
+        else
+        case when ISNULL(scc.memberidto, '')='' then 0
+        else 1 end
+        end
+        as qdstatus,cc.id bmid
+
+        from qkjvip_member_activitymbs a
+        join qkjvip_member_activity activ on (a.activity_id=activ.id)
+        join Func_GetNewestMemberInfo() member on (member.member_id=a.member_id)
+        left join
+        (
+        SELECT bs.memberidto,s.acitvity_id,s.id from qkjvip_member_signup s
+        join Func_GetNewestMemberInfo() bs on (bs.member_id=s.memberid )
+        ) cc on (cc.memberidto = member.memberidto and cc.acitvity_id=a.activity_id)
+        left join
+        (
+        SELECT bs.memberidto,m.activity_id from qkjvip_member_signupmember m
+        join Func_GetNewestMemberInfo() bs on (bs.member_id=m.member_id )
+        ) scc on (scc.memberidto = member.memberidto and scc.activity_id=a.activity_id)
+
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND a.ACTIVITY_ID = '${params.activityId}'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(a.memberidto,a.member_id)
+            and c.member_id='${params.memberId}'
+            )
+        </if>
+    </sql>
+
+    <sql id="memberActivityExcel">
+        SELECT acp.title,acp.star_date,acp.end_date,acp.islayer,acp.atype,member.real_name,member.member_name,member.mobile,a.*,
+        CASE when acp.isexcel = 1 then '是'
+        else
+        case when ISNULL(cc.memberidto, '')='' then '否'
+        else '是' end
+        end
+        as bmstatusstr,
+
+        CASE when acp.isexcel = 1 then '是'
+        else
+        case when ISNULL(scc.memberidto, '')='' then '否'
+        else '是' end
+        end
+        as qdstatusstr,
+        case when a.status=1 then '邀约'
+        when a.status=2 then '自主报名'
+        ELSE '现场报名' end as statusstr
+
+        from qkjvip_member_activitymbs a
+        join qkjvip_member_activity acp on (a.activity_id=acp.id)
+        join Func_GetNewestMemberInfo() member on (member.member_id=a.member_id)
+        left join
+        (
+        SELECT bs.memberidto,s.acitvity_id,s.id from qkjvip_member_signup s
+        join Func_GetNewestMemberInfo() bs on (bs.member_id=s.memberid )
+        ) cc on (cc.memberidto = member.memberidto and cc.acitvity_id=a.activity_id)
+        left join
+        (
+        SELECT bs.memberidto,m.activity_id from qkjvip_member_signupmember m
+        join Func_GetNewestMemberInfo() bs on (bs.member_id=m.member_id )
+        ) scc on (scc.memberidto = member.memberidto and scc.activity_id=a.activity_id)
+
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND a.ACTIVITY_ID = '${params.activityId}'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(member.memberidto,a.member_id)
+            and c.member_id='${params.memberId}'
+            )
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberActivitymbsPageCount" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="selectSqlCount"/>
+    </select>
+
+    <select id="queryAllCount" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="selectSqlCount"/>
+    </select>
+
+    <select id="selectQkjvipMemberActivitymbsPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectPerQkjvipMemberActivityPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="memberActivityExcel"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteBatchByOrder">
+        DELETE FROM QKJVIP_MEMBER_ACTIVITYMBS WHERE ACTIVITY_ID = #{activityId}
+    </delete>
+
+    <select id="queryByActivityId" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberMessageUserQueryEntity">
+        SELECT DISTINCT ISNULL(m1.memberidto, m1.member_id) as member_id, ISNULL(m2.openid, m1.openid) as openid, ISNULL(m2.mobile, m1.mobile) as mobile
+        FROM QKJVIP_MEMBER_ACTIVITYMBS a  WITH(NOLOCK)
+        inner join qkjvip_member m1 WITH(NOLOCK) on a.member_id=m1.member_id
+        left join  qkjvip_member m2 WITH(NOLOCK) on m1.memberidto=m2.member_id
+        where a.ACTIVITY_ID = #{value}
+        AND (( ISNULL(m1.memberidto,'null') != 'null' and (ISNULL(m2.MemberGroup, 'null') = 'null' or m2.MemberGroup=''))
+            or (ISNULL(m1.memberidto,'null') = 'null' and (ISNULL(m1.MemberGroup, 'null') = 'null' or m1.MemberGroup=''))
+            )
+    </select>
+
+    <select id="queryTopOne" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        SELECT top 1 t.*
+        FROM QKJVIP_MEMBER_ACTIVITYMBS T
+        join qkjvip_member a on (t.MEMBER_ID=a.member_id)
+        WHERE 1=1
+        <if test="params.activityId != null and params.activityId.trim() != ''">
+            AND T.ACTIVITY_ID LIKE '%${params.activityId}%'
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(a.memberidto,a.member_id)
+            and c.member_id='${params.memberId}'
+            )
+        </if>
+    </select>
+
+    <select id="queryAllResultExcel" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberActivitymbsEntity">
+        <include refid="memberActivityExcel"/>
+    </select>
+</mapper>

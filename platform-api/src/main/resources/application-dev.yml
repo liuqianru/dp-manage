@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+#    代码生成通过读取driverClassName来判断数据库类型
+    driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#    driverClassName: oracle.jdbc.driver.OracleDriver
+    druid:
+      first:  #数据源1
+        url: jdbc:sqlserver://rm-2ze695nl5hdo6rq4e7m.sqlserver.rds.aliyuncs.com:1433;database=crm
+        username: crm
+        password: Qqkj002646
+        driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      second:   #数据源3
+         url: jdbc:sqlserver://111.12.190.162:1433;database=qkjerp
+         username: sa
+         password: 123qwe_
+         driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      three:  #数据源3
+          url: jdbc:sqlserver://rm-2ze695nl5hdo6rq4e7m.sqlserver.rds.aliyuncs.com:1433;database=dinglogin
+          username: dinglogin
+          password: Qqkj002646
+          driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+#        url: jdbc:oracle:thin:@localhost:1521:platform
+#        username: platform
+#        password: 123456
+      initial-size: 10
+      max-active: 100
+      min-idle: 10
+      max-wait: 60000
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      #validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+        login-username: plaftorm
+        login-password: Qqkj002646!
+      filter:
+        stat:
+          log-slow-sql: true
+          slow-sql-millis: 1000
+          merge-sql: false
+        wall:
+          config:
+            multi-statement-allow: true

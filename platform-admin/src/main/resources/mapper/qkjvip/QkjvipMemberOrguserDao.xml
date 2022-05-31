@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberOrguserDao">
+
+    <sql id="selectSql">
+        SELECT T.*,o.ORG_NO orgno, o.ORG_NAME orgname
+        FROM QKJVIP_MEMBER_ORGUSER T
+        LEFT JOIN sys_user u ON (T.userid=u.USER_ID)
+        LEFT JOIN sys_org o ON (o.ORG_NO = u.ORG_NO)
+        WHERE T.Disabled = 0
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND T.MemberId = #{params.memberId}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberOrguserPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberOrguserEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberOrguserEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

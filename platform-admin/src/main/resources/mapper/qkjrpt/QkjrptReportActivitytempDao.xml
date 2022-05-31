@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrpt.dao.QkjrptReportActivitytempDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJRPT_REPORT_ACTIVITYTEMP T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjrptReportActivitytempPage" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <sql id="selectSqlRpt">
+        SELECT
+        ISNULL(t.areacode, 1000) areacode,
+        ISNULL(t.AreaName, '其他') areaname,
+        count(1) as pertime,sum(t.amount) totalcost
+        FROM QKJRPT_REPORT_ACTIVITYTEMP T where
+        ISNULL(t.activityType, 1000) != 1000
+        and ISNULL(t.membergroup, '1000') != '1000'
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  t.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  t.createon  &lt; = #{params.endregtime}
+        </if>
+        <if test="params.identitylevel != null and params.identitylevel.trim() != ''">
+            AND  t.identitylevel = #{params.identitylevel}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  t.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  t.identitygroup = #{params.identitygroup}
+        </if>
+
+        GROUP BY t.AreaName,t.areacode
+    </sql>
+    <sql id="selectSqlRptTs">
+        SELECT
+        ISNULL(t.IdentityLevel, 99) IdentityLevel,
+        ISNULL(t.IdentityLevelName, '其他') IdentityLevelName,
+        count(1) as pertime1,
+        (SELECT sum(plannum) from qkjrpt_report_activitypeoplan s where
+        s.IdentityLevel=T.IdentityLevel and ISNULL(s.membergroup, '1000') != '1000'
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  s.createon like CONCAT('%',LEFT(#{params.startregtime},4), '%')
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  s.createon  like CONCAT('%',LEFT(#{params.endregtime},4), '%')
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  s.membergroup = #{params.membergroup}
+        </if>
+
+        GROUP BY s.IdentityLevel) as pertime2,
+
+
+        (SELECT sum(s.Amount) from qkjrpt_report_activitytemp s where (s.ReportDepNo!='999902' and s.ReportDepNo!='1308' and  s.ReportDepNo!='1215' or isnull(s.ReportDepNo, '999908') = '999908')
+        AND s.IdentityLevel=T.IdentityLevel and ISNULL(s.membergroup, '1000') != '1000'
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  s.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(s.AreaCode, '1000') = '1000' or s.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  s.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  s.createon  &lt;= #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  s.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  s.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  s.ActivityType = #{params.activitytype}
+        </if>
+
+        GROUP BY s.IdentityLevel) as totalcost4,
+
+        (SELECT sum(s.Amount) from qkjrpt_report_activitytemp s where s.ReportDepNo='999902'
+        AND s.IdentityLevel=T.IdentityLevel and ISNULL(s.membergroup, '1000') != '1000'
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  s.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(s.AreaCode, '1000') = '1000' or s.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  s.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  s.createon  &lt;= #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  s.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  s.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  s.ActivityType = #{params.activitytype}
+        </if>
+        GROUP BY s.IdentityLevel) as totalcost1,
+        (SELECT sum(s.Amount) from qkjrpt_report_activitytemp s where s.ReportDepNo='1308' AND s.IdentityLevel=T.IdentityLevel
+        and ISNULL(s.membergroup, '1000') != '1000'
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  s.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(s.AreaCode, '1000') = '1000' or s.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  s.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  s.createon  &lt;= #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  s.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  s.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  s.ActivityType = #{params.activitytype}
+        </if>
+        GROUP BY s.IdentityLevel) as totalcost2,
+        (SELECT sum(s.Amount) from qkjrpt_report_activitytemp s where s.ReportDepNo='1215' AND s.IdentityLevel=T.IdentityLevel
+        and ISNULL(s.membergroup, '1000') != '1000'
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  s.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(s.AreaCode, '1000') = '1000' or s.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  s.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  s.createon  &lt;= #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  s.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  s.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  s.ActivityType = #{params.activitytype}
+        </if>
+        GROUP BY s.IdentityLevel) as totalcost3
+        FROM qkjrpt_report_activitytemp T where   ISNULL(t.activityType, 1000) != 1000
+        and ISNULL(t.membergroup, '1000') != '1000'
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  t.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  t.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  t.createon  &lt;= #{params.endregtime}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  t.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  t.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  t.ActivityType = #{params.activitytype}
+        </if>
+        GROUP BY T.IdentityLevel,T.IdentityLevelName
+        ORDER BY T.IdentityLevel ASC
+    </sql>
+    <sql id="queryAllTypeRpt">
+        SELECT t.activityType,t.activityTypeName,count(1) as pertime
+        <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 1"> <!--人次-->
+            ,count(1) as pertime1,
+            (SELECT sum(plannum) from qkjrpt_report_activitypeoplan s where
+            s.activityType=T.activityType
+            <if test="params.startregtime != null and params.startregtime.trim() != ''">
+                AND  s.createon like CONCAT('%',LEFT(#{params.startregtime},4), '%')
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  s.createon  like CONCAT('%',LEFT(#{params.endregtime},4), '%')
+            </if>
+            <if test="params.areacode != null and params.areacode.trim() != ''">
+                <if test="params.areacode != '1000'">
+                    AND  s.areacode = #{params.areacode}
+                </if>
+                <if test="params.areacode == '1000'">
+                    AND  ( ISNULL(s.AreaCode, '1000') = '1000' or s.AreaCode = '')
+                </if>
+            </if>
+            <if test="params.membergroup != null and params.membergroup.trim() != ''">
+                AND  s.membergroup = #{params.membergroup}
+            </if>
+            GROUP BY s.activityType) as pertime2
+        </if>
+        <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 2"><!--桌次-->
+            ,(SELECT sum(s.sessionnum) from qkjvip_member_activity s where s.atype=t.activityType and s.atype in (1,16) GROUP BY s.atype) as pertime1,
+            (SELECT sum(plannum) from qkjrpt_report_activityseatplan s where
+            s.activityType=T.activityType and s.activityType in (1,16)
+            <if test="params.startregtime != null and params.startregtime.trim() != ''">
+                AND  s.createon like CONCAT('%',LEFT(#{params.startregtime},4), '%')
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  s.createon  like CONCAT('%',LEFT(#{params.endregtime},4), '%')
+            </if>
+            GROUP BY s.activityType) as pertime2
+        </if>
+        <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 3"><!--场次-->
+            ,(SELECT sum(s.sessionnum) from qkjvip_member_activity s where s.atype=t.activityType and s.atype in (11,12,15) GROUP BY s.atype) as pertime1,
+            (SELECT sum(plannum) from qkjrpt_report_activityseatplan s where
+            s.activityType=T.activityType and s.activityType in (4,11,12,15)
+            <if test="params.startregtime != null and params.startregtime.trim() != ''">
+                AND  s.createon like CONCAT('%',LEFT(#{params.startregtime},4), '%')
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  s.createon  like CONCAT('%',LEFT(#{params.endregtime},4), '%')
+            </if>
+            GROUP BY s.activityType) as pertime2
+        </if>
+        FROM QKJRPT_REPORT_ACTIVITYTEMP T where
+        ISNULL(t.activityType, 1000) != 1000
+        and ISNULL(t.membergroup, '1000') != '1000'
+        and t.activityType in (1,4,11,12,15,16)
+        <if test="params.startregtime != null and params.startregtime.trim() != ''">
+            AND  t.createon >= #{params.startregtime}
+        </if>
+        <if test="params.endregtime != null and params.endregtime.trim() != ''">
+            AND  t.createon  &lt; = #{params.endregtime}
+        </if>
+        <if test="params.areacode != null and params.areacode.trim() != ''">
+            <if test="params.areacode != '1000'">
+                AND  t.areacode = #{params.areacode}
+            </if>
+            <if test="params.areacode == '1000'">
+                AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+            </if>
+        </if>
+        <if test="params.identitylevel != null and params.identitylevel.trim() != ''">
+            AND  t.identitylevel = #{params.identitylevel}
+        </if>
+        <if test="params.membergroup != null and params.membergroup.trim() != ''">
+            AND  t.membergroup = #{params.membergroup}
+        </if>
+        <if test="params.identitygroup != null and params.identitygroup.trim() != ''">
+            AND  t.identitygroup = #{params.identitygroup}
+        </if>
+        <if test="params.activitytype != null and params.activitytype.trim() != ''">
+            AND  t.ActivityType = #{params.activitytype}
+        </if>
+        GROUP BY t.activityType,t.activityTypeName
+    </sql>
+
+    <sql id="queryAllRptSource">
+        SELECT t.atype activitytype,sum(t.sessionnum) pertime  from qkjvip_member_activity t where ISNULL(t.atype, 1000) != 1000
+        <if test="params.acttypesource != null and params.acttypesource.trim() != '' and params.acttypesource.trim() == 2">
+            AND  t.atype in (1,16)
+        </if>
+        <if test="params.acttypesource != null and params.acttypesource.trim() != '' and params.acttypesource.trim() == 3">
+            AND  t.atype in (4,11,12,15)
+        </if>
+
+        GROUP BY t.atype
+    </sql>
+
+    <!--人次同比，环比，实际数，目标数-->
+    <sql id="queryAllRptTotal">
+        SELECT *, Convert(decimal(18,2),(t.monthnow/t.monthup)*100)  as monthscale,
+        case when t.yearup = 0 then 0
+        ELSE
+        Convert(decimal(18,2),(t.monthnow/t.yearup)*100) end  as yearscale
+        from (
+        SELECT max(a.monthnow + 0.00) monthnow, max(a.monthup + 0.00) monthup,max(a.yearup + 0.00) yearup,max(a.plannum) plannum  from (
+        <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 1"> <!--人次-->
+            SELECT count(1) monthnow,0 monthup,0 yearup, 0 plannum from QKJRPT_REPORT_ACTIVITYTEMP t
+            where ISNULL(t.activityType, 1000) != 1000  and ISNULL(t.membergroup, '1000') != '1000' and t.activityType in (1,4,11,12,15,16)
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime.trim() != ''">
+                AND  t.createon >= #{params.startregtime}
+            </if>
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.createon >= #{params.homestartime}
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  t.createon  &lt;= #{params.endregtime}
+            </if>
+            <if test="params.areacode != null and params.areacode.trim() != ''">
+                <if test="params.areacode != '1000'">
+                    AND  t.areacode = #{params.areacode}
+                </if>
+                <if test="params.areacode == '1000'">
+                    AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+                </if>
+            </if>
+            <if test="params.membergroup != null and params.membergroup.trim() != ''">
+                AND  t.membergroup = #{params.membergroup}
+            </if>
+            union all
+            SELECT 0 monthnow,count(1) monthup,0 yearup, 0 plannum from QKJRPT_REPORT_ACTIVITYTEMP t
+            where ISNULL(t.activityType, 1000) != 1000 and ISNULL(t.membergroup, '1000') != '1000' and t.activityType in (1,4,11,12,15,16)
+
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime != ''">
+                AND t.createon &gt;= dateadd(mm, - 1, CONVERT(date,#{params.startregtime}))
+            </if>
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.createon &gt;= dateadd(mm, - 1, CONVERT(date,#{params.homestartime}))
+            </if>
+            <if test="params.endregtime != null and params.endregtime != ''">
+                AND t.createon &lt; dateadd(mm, - 1, CONVERT(date,#{params.endregtime}))
+            </if>
+
+            <if test="params.areacode != null and params.areacode.trim() != ''">
+                <if test="params.areacode != '1000'">
+                    AND  t.areacode = #{params.areacode}
+                </if>
+                <if test="params.areacode == '1000'">
+                    AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+                </if>
+            </if>
+            <if test="params.membergroup != null and params.membergroup.trim() != ''">
+                AND  t.membergroup = #{params.membergroup}
+            </if>
+            union all
+            SELECT 0 monthnow,0 monthup,count(1) yearup, 0 plannum from QKJRPT_REPORT_ACTIVITYTEMP t
+            where ISNULL(t.activityType, 1000) != 1000 and ISNULL(t.membergroup, '1000') != '1000'
+            and
+            t.activityType in (1,4,11,12,15,16)
+
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime != ''">
+                AND t.createon &gt;= dateadd(yyyy, - 1, CONVERT(date,#{params.startregtime}))
+            </if>
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.createon &gt;= dateadd(mm, - 1, CONVERT(date,#{params.homestartime}))
+            </if>
+            <if test="params.endregtime != null and params.endregtime != ''">
+                AND t.createon &lt; dateadd(yyyy, - 1, CONVERT(date,#{params.endregtime}))
+            </if>
+
+            <if test="params.areacode != null and params.areacode.trim() != ''">
+                <if test="params.areacode != '1000'">
+                    AND  t.areacode = #{params.areacode}
+                </if>
+                <if test="params.areacode == '1000'">
+                    AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+                </if>
+            </if>
+            <if test="params.membergroup != null and params.membergroup.trim() != ''">
+                AND  t.membergroup = #{params.membergroup}
+            </if>
+            union all
+            SELECT 0 monthnow,8 monthup,0 yearup,sum(t.plannum) plannum from qkjrpt_report_activitypeoplan t
+            where ISNULL(t.activityType, 1000) != 1000 and ISNULL(t.membergroup, '1000') != '1000' and t.activityType in (1,4,11,12,15,16)
+            <if test="params.startregtime != null and params.startregtime.trim() != ''">
+                AND  t.createon like CONCAT(LEFT(#{params.startregtime},4), '%')
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  t.createon  like CONCAT(LEFT(#{params.endregtime},4), '%')
+            </if>
+            <if test="params.areacode != null and params.areacode.trim() != ''">
+                <if test="params.areacode != '1000'">
+                    AND  t.areacode = #{params.areacode}
+                </if>
+                <if test="params.areacode == '1000'">
+                    AND  ( ISNULL(t.AreaCode, '1000') = '1000' or t.AreaCode = '')
+                </if>
+            </if>
+            <if test="params.membergroup != null and params.membergroup.trim() != ''">
+                AND  t.membergroup = #{params.membergroup}
+            </if>
+        </if>
+        <if test="params.acttype != null and params.acttype.trim() != '' and (params.acttype.trim() == 2 or params.acttype.trim() == 3)"><!--桌次-->
+            SELECT sum(sessionnum) monthnow,0 monthup,0 yearup, 0 plannum from qkjvip_member_activity t
+            where
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 2"><!--桌次-->
+                t.atype in (1,16)
+            </if>
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 3"><!--场次-->
+                 t.atype in (4,11,12,15)
+            </if>
+
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime.trim() != ''">
+                AND  t.addtime >= #{params.startregtime}
+            </if>
+
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.addtime >= #{params.homestartime}
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  t.addtime  &lt;= #{params.endregtime}
+            </if>
+
+            union all
+            SELECT 0 monthnow,sum(sessionnum)  monthup,0 yearup, 0 plannum from qkjvip_member_activity t
+            where
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 2"><!--桌次-->
+                  t.atype in (1,16)
+            </if>
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 3"><!--场次-->
+                  t.atype in (4,11,12,15)
+            </if>
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime != ''">
+                AND t.addtime &gt;= dateadd(mm, - 1, CONVERT(date,#{params.startregtime}))
+            </if>
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.addtime &gt;= dateadd(mm, - 1, CONVERT(date,#{params.homestartime}))
+            </if>
+            <if test="params.endregtime != null and params.endregtime != ''">
+                AND t.addtime &lt; dateadd(mm, - 1, CONVERT(date,#{params.endregtime}))
+            </if>
+            union all
+            SELECT 0 monthnow,0 monthup,sum(sessionnum) yearup, 0 plannum from qkjvip_member_activity t
+            where
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 2"><!--桌次-->
+                  t.atype in (1,16)
+            </if>
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 3"><!--场次-->
+                  t.atype in (4,11,12,15)
+            </if>
+
+            <if test="params.homestartime == null and params.startregtime != null and params.startregtime != ''">
+                AND t.addtime &gt;= dateadd(yyyy, - 1, CONVERT(date,#{params.startregtime}))
+            </if>
+
+            <if test="params.homestartime != null and params.homestartime.trim() != ''">
+                AND  t.addtime &gt;= dateadd(mm, - 1, CONVERT(date,#{params.homestartime}))
+            </if>
+            <if test="params.endregtime != null and params.endregtime != ''">
+                AND t.addtime &lt; dateadd(yyyy, - 1, CONVERT(date,#{params.endregtime}))
+            </if>
+
+
+            union all
+            SELECT 0 monthnow,8 monthup,0 yearup,sum(t.plannum) plannum from qkjrpt_report_activityseatplan t
+            where
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 2"><!--桌次-->
+                  t.ActivityType in (1,16)
+            </if>
+            <if test="params.acttype != null and params.acttype.trim() != '' and params.acttype.trim() == 3"><!--场次-->
+                  t.ActivityType in (4,11,12,15)
+            </if>
+
+            <if test="params.startregtime != null and params.startregtime.trim() != ''">
+                AND  t.createon like CONCAT(LEFT(#{params.startregtime},4), '%')
+            </if>
+            <if test="params.endregtime != null and params.endregtime.trim() != ''">
+                AND  t.createon  like CONCAT(LEFT(#{params.endregtime},4), '%')
+            </if>
+
+        </if>
+        ) a ) t
+    </sql>
+    <select id="queryAllRpt" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="selectSqlRpt"/>
+    </select>
+    <select id="queryAllTypeRpt" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="queryAllTypeRpt"/>
+    </select>
+    <select id="queryAllRptSource" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="queryAllRptSource"/>
+    </select>
+    <select id="queryAllRptTs" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="selectSqlRptTs"/>
+    </select>
+
+    <!--统计环比。。。。-->
+    <select id="queryAllRptTotal" resultType="com.platform.modules.qkjrpt.entity.QkjrptReportActivitytempEntity">
+        <include refid="queryAllRptTotal"/>
+    </select>
+</mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjrts.dao.QkjrtsWelfareMemberDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,
+        u.member_name,
+        u.real_name,
+        u.mobile
+        FROM QKJRTS_WELFARE_MEMBER T
+        LEFT JOIN Func_GetNewestMemberInfo() u ON (T.member_id = u.member_id)
+        WHERE 1=1
+        <if test="params.mainid != null and params.mainid.trim() != ''">
+            AND T.mainid = #{params.mainid}
+        </if>
+    </sql>
+
+    <select id="selectQkjrtsWelfareMemberPage" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareMemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjrts.entity.QkjrtsWelfareMemberEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryByMainId" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberMessageUserQueryEntity">
+        SELECT DISTINCT u.member_id, u.openid, u.mobile
+        FROM QKJRTS_WELFARE_MEMBER T  WITH(NOLOCK)
+        LEFT JOIN Func_GetNewestMemberInfo() u ON (T.member_id = u.member_id)
+        where ISNULL(T.NotifyStatus,0) = 0 and T.mainid = #{value}
+    </select>
+
+    <update id="updateByMainId">
+        update QKJRTS_WELFARE_MEMBER set NotifyStatus = 1 where MainId = #{value}
+    </update>
+
+    <delete id="deleteByMainId">
+        DELETE FROM QKJRTS_WELFARE_MEMBER WHERE mainid = #{value}
+    </delete>
+</mapper>

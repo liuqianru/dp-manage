@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjwine.dao.QkjwineRInfoDao">
+
+    <sql id="selectSql">
+        SELECT take.id takeid,case when p.Disabled = 1 then 2
+        else take.state end as takestate,
+        take.taketype,take.receiver takename,take.receivephone takemobile,take.receiveaddress takeaddress,take.takeDate applytakedate,t.*,p.proname,pp.productimg,pp.saleprice,h.HouseName,isNull(m.real_name, m.member_name) membername,m.mobile,
+        case when t.ordertype = 0 then
+        (SELECT sum(od.RealTotalPrice) from qkjvip_order_orderdetail od
+        where od.morderid=t.orderid and od.productid=p.proid and od.disabled=0)
+        when t.ordertype = 1 THEN
+        (SELECT sum(opt1.price) from qkjcus_order_pro opt1 where opt1.mainid=t.orderid
+        and opt1.wareproid=t.wareporid)
+        end price,
+        case when t.ordertype = 0 then
+        (SELECT od.CreateTime from qkjvip_order_order od
+        where od.id=t.orderid)
+        when t.ordertype = 1 THEN
+        (SELECT opt1.add_time from qkjcus_order opt1 where opt1.Id=t.orderid
+        )
+        end createdate,
+        case when t.ordertype = 0 then
+        (SELECT a.CreateOn from qkjvip_order_deliverlog a
+        where
+        EXISTS (
+        SELECT * from qkjwine_r_info b
+        join qkjvip_order_warepro p on (b.wareporid=p.id)
+        where b.orderid=a.OrderId and p.wareid=a.WareHouseId and p.proid=a.ProductId
+        and b.id=t.id
+        ))
+        when t.ordertype = 1 THEN
+        (SELECT a.add_time from qkjcus_order_out a
+        where EXISTS (
+        SELECT * from qkjwine_r_info b where a.instockid=b.orderid
+        and a.wareproid=b.wareporid and b.id=t.id
+        ))
+        end takedate,
+        (SELECT info.add_time FROM QKJWINE_R_INFO info WHERE info.id=t.otherwineid) receivedate
+        from QKJWINE_R_INFO t
+        join qkjvip_order_warepro p on (t.wareporid=p.id)
+        join qkjvip_product_product pp on (p.proid=pp.Id and pp.ProductType=2)
+        join qkjvip_order_warehouse h on (p.wareid=h.Id)
+        left join Func_GetNewestMemberInfo() m on (m.member_id=t.memberid)
+        left join qkjtake_r_wine take on (t.takeid = take.id)
+        WHERE t.disable=0
+        <if test="params.id != null and params.id.trim() != ''">
+            AND T.id= #{params.id}
+        </if>
+        <if test="params.orderid != null and params.orderid.trim() != ''">
+            AND T.orderid= #{params.orderid}
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND (T.memberid= #{params.memberid}
+            <if test="params.scenephone != null and params.scenephone.trim() != ''">
+                OR T.scenephone= #{params.scenephone}
+            </if>
+            )
+        </if>
+        <if test="params.memberid == null or params.memberid.trim() == ''">
+            <if test="params.scenephone != null and params.scenephone.trim() != ''">
+                AND T.scenephone= #{params.scenephone}
+            </if>
+        </if>
+        <if test="params.nostatus != null and params.nostatus.trim() != ''">
+            AND T.state != 2
+        </if>
+        order by T.add_time desc
+    </sql>
+
+    <sql id="selectSqlSimple">
+        SELECT t.*
+        from QKJWINE_R_INFO t
+        WHERE t.disable=0
+        <if test="params.wareproid != null and params.wareproid.trim() != ''">
+            AND t.wareporid=#{params.wareproid}
+        </if>
+
+        <if test="params.orders!=null">
+            AND t.orderid in
+            <foreach collection="params.orders" item="item"
+                     index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+
+            AND not EXISTS(
+            SELECT 1 from qkjsms_r_info i where i.wineid=t.id and i.state =0
+            )
+        </if>
+    </sql>
+
+    <select id="selectQkjwineRInfoPage" resultType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="selectSqlSimple" resultType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+        <include refid="selectSqlSimple"/>
+    </select>
+
+    <select id="queryValue" resultType="Double">
+        SELECT ISNULL(sum(h.SalePrice), 0) saleprice
+        from QKJWINE_R_INFO t
+        join qkjvip_order_warepro p on (t.wareporid=p.id)
+        join qkjvip_product_product h on (p.proid=h.Id)
+        WHERE t.state=0 and t.disable=0
+        <if test="params.isStore != null and params.isStore.trim() != ''">
+            and t.state = 0
+            and not EXISTS (
+            SELECT 1 from qkjtake_r_wine tw where tw.wineid=t.id and tw.state > 0
+            )
+            and not EXISTS (
+            SELECT 1 from qkjvip_order_deliverlog dl where dl.orderid=t.orderid
+            and dl.warehouseid = p.wareid and dl.productid=p.proid
+            )
+            and not EXISTS (
+            SELECT 1 from qkjcus_order_out oo where oo.id=t.orderid and oo.wareproid=t.wareporid
+            )
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND t.memberid= #{params.memberid}
+        </if>
+        <if test="params.id != null and params.id.trim() != ''">
+            AND t.id= #{params.id}
+        </if>
+    </select>
+
+    <!-- 更新信息 -->
+    <update id="updateWineInfo" parameterType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+		UPDATE QKJWINE_R_INFO
+		SET orderid = #{orderid},
+		ordertype = #{ordertype},
+		memberid = #{memberid}
+		WHERE wareporid = #{wareporid}
+	</update>
+    <!-- 更新提货id -->
+    <update id="updateTakeIdById" parameterType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+		UPDATE QKJWINE_R_INFO
+		SET takeid = #{takeid}
+		WHERE Id = #{id}
+	</update>
+    <!-- 更新实际入库时间 -->
+    <update id="updateScenetimeByWareporid" parameterType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+		UPDATE QKJWINE_R_INFO
+		SET scenetime = #{scenetime}
+		WHERE wareporid = #{wareporid}
+	</update>
+
+    <!-- 更新封坛编号 -->
+    <update id="updateFtnumByWareporid" parameterType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+		UPDATE QKJWINE_R_INFO
+		SET ftnumber = #{ftnumber}
+		WHERE wareporid = #{wareporid}
+	</update>
+
+    <!-- 删除酒证 -->
+    <update id="mdyWineDisableById" parameterType="com.platform.modules.qkjwine.entity.QkjwineRInfoEntity">
+		UPDATE QKJWINE_R_INFO
+		SET disable = 1
+		WHERE  wareporid = #{wareporid}
+	</update>
+</mapper>

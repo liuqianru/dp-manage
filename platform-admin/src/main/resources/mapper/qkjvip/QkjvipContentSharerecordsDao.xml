@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipContentSharerecordsDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_CONTENT_SHARERECORDS T
+        WHERE 1=1
+        <if test="params.recordKey != null and params.recordKey.trim() != ''">
+            AND T.record_key = #{params.recordKey}
+        </if>
+        <if test="params.recordValue != null and params.recordValue != ''">
+            AND T.record_value = #{params.recordValue}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipContentSharerecordsPage" resultType="com.platform.modules.qkjvip.entity.QkjvipContentSharerecordsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipContentSharerecordsEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

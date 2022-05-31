@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.MemberDao">
+    <sql id="selectSql">
+        <if test="params.memberId!=null and params.memberId!=''">
+            and m.member_id=#{params.memberId}
+        </if>
+        <if test="params.memberName != null and params.memberName != ''">
+            AND m.member_name LIKE '%${params.memberName}%'
+        </if>
+        <if test="params.realName != null and params.realName != ''">
+            AND m.real_name LIKE '%${params.realName}%'
+        </if>
+        <if test="params.mobile != null and params.mobile != ''">
+            AND m.mobile = #{params.mobile}
+        </if>
+        <if test="params.sex != null and params.sex != ''">
+            AND m.sex = #{params.sex}
+        </if>
+        <if test="params.orgNo != null and params.orgNo != ''">
+            AND m.org_no = #{params.orgNo}
+        </if>
+        <if test="params.orgUserid != null and params.orgUserid != ''">
+            AND m.org_userid = #{params.orgUserid}
+        </if>
+        <if test="params.memberType != null and params.memberType != ''">
+            AND m.member_type = #{params.memberType}
+        </if>
+        <!-- 年龄区间start -->
+        <if test="params.ageFrom != null and params.ageFrom != ''">
+            AND m.age &gt;= #{params.ageFrom}
+        </if>
+        <if test="params.ageTo != null and params.ageTo != ''">
+            AND m.age &lt; #{params.ageTo}
+        </if>
+        <!-- 年龄区间end -->
+        <!-- 注册时间start -->
+        <if test="params.regTimeFrom != null and params.regTimeFrom != ''">
+            AND m.reg_time &gt;= #{params.regTimeFrom}
+        </if>
+        <if test="params.regTimeTo != null and params.regTimeTo != ''">
+            AND m.reg_time &lt; #{params.regTimeTo}
+        </if>
+        <!-- 注册时间end -->
+        <!-- 近期购买金额start -->
+        <if test="params.amountfrom != null and params.amountfrom != ''">
+            <if test="params.buyPeriod == 1">
+                AND m.amount1 &gt;= #{params.amountfrom}
+            </if>
+            <if test="params.buyPeriod == 2">
+                AND m.amount3 &gt;= #{params.amountfrom}
+            </if>
+            <if test="params.buyPeriod == 3">
+                AND m.amount6 &gt;= #{params.amountfrom}
+            </if>
+            <if test="params.buyPeriod == 4">
+                AND m.amount12 &gt;= #{params.amountfrom}
+            </if>
+        </if>
+        <if test="params.amountto != null and params.amountto != ''">
+            <if test="params.buyPeriod == 1">
+                AND m.amount1 &lt; #{params.amountto}
+            </if>
+            <if test="params.buyPeriod == 2">
+                AND m.amount3 &lt; #{params.amountto}
+            </if>
+            <if test="params.buyPeriod == 3">
+                AND m.amount6 &lt; #{params.amountto}
+            </if>
+            <if test="params.buyPeriod == 4">
+                AND m.amount12 &lt; #{params.amountto}
+            </if>
+        </if>
+        <!-- 近期购买金额end -->
+        <!-- 近期购买次数start -->
+        <if test="params.buynumfrom != null and params.buynumfrom != ''">
+            <if test="params.buyPeriod == 1">
+                AND m.buynum1 &gt;= #{params.buynumfrom}
+            </if>
+            <if test="params.buyPeriod == 2">
+                AND m.buynum3 &gt;= #{params.buynumfrom}
+            </if>
+            <if test="params.buyPeriod == 3">
+                AND m.buynum6 &gt;= #{params.buynumfrom}
+            </if>
+            <if test="params.buyPeriod == 4">
+                AND m.buynum12 &gt;= #{params.buynumfrom}
+            </if>
+        </if>
+        <if test="params.buynumto != null and params.buynumto != ''">
+            <if test="params.buyPeriod == 1">
+                AND m.buynum1 &lt; #{params.buynumto}
+            </if>
+            <if test="params.buyPeriod == 2">
+                AND m.buynum3 &lt; #{params.buynumto}
+            </if>
+            <if test="params.buyPeriod == 3">
+                AND m.buynum6 &lt; #{params.buynumto}
+            </if>
+            <if test="params.buyPeriod == 4">
+                AND m.buynum12 &lt; #{params.buynumto}
+            </if>
+        </if>
+        <!-- 近期购买次数end -->
+        <!-- 近一年客单价start-->
+        <if test="params.unitpricefrom != null and params.unitpricefrom != ''">
+            AND m.unitprice &gt;= #{params.unitpricefrom}
+        </if>
+        <if test="params.unitpriceto != null and params.unitpriceto != ''">
+            AND m.unitprice &lt; #{params.unitpriceto}
+        </if>
+        <!-- 近一年客单价end-->
+        <!-- 标签 -->
+        <if test="params.conditionSql != null and params.conditionSql != ''">
+            AND ${params.conditionSql}
+        </if>
+    </sql>
+	<select id="queryAll" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT m.* FROM qkjvip_member m WHERE 1=1
+        <include refid="selectSql"/>
+	</select>
+	<select id="selectMemberList" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT m.*,u.REAL_NAME orgUsername FROM qkjvip_member m
+        LEFT JOIN sys_user u ON (m.org_userid=u.USER_ID)
+        WHERE 1=1
+        <include refid="selectSql"/>
+	</select>
+    <select id="selectMemberList2" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT m.*,u.REAL_NAME orgUsername FROM qkjvip_member m
+        INNER JOIN (SELECT DISTINCT member_id FROM qkjvip_member_tags) mt ON (m.member_id=mt.member_id)
+        LEFT JOIN sys_user u ON (m.org_userid=u.USER_ID)
+        WHERE 1=1
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryMemberInfo" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT TOP 1 * FROM qkjvip_member m WHERE 1=1 and statusflag!=1 and mobile = #{value}
+    </select>
+
+    <!--根据openid判断是否关注公众号：孙珊珊-->
+    <select id="selectMemberByOpenid" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        select top 1 ISNULL(b.memberidto,b.member_id) as memberId,
+        (
+        select  top 1 ISNULL(tb.mobile,ta.ScanPhoneNo) as mobile  from [dbo].[qkjvip_member_jueru] ta
+        inner join qkjvip_member tb on ta.crm_memberid=tb.member_id and ta.Disabled=0
+        where ta.AppOpenId=#{params.openid} AND ta.IsSubscribe = 1
+        and ((tb.mobile!='' and tb.mobile is not null) or (ta.ScanPhoneNo!='' and ta.ScanPhoneNo is not null)))
+        as mobile,
+        ISNULL(b.real_name, b.member_name) as member_name,
+        case when (b.sex=3) then 1
+        else b.sex end as sex,
+        b.sex as oldsex,
+        ISNULL(b.head_img_url, a.HeadImgurl) headImgUrl
+        from [dbo].[qkjvip_member_jueru] a
+        inner join qkjvip_member b on a.crm_memberid=b.member_id
+        where a.AppOpenId=#{params.openid} and a.Disabled=0
+
+        <if test="params.isfollow != null and params.isfollow != ''"> <!-- isfollow不为空时查询是否是会员，否则查询客户信息-->
+            and a.MemberChannel=200 AND a.IsSubscribe = 1
+        </if>
+    </select>
+
+    <!--抽奖活动根据openid获取会员信息：孙珊珊-->
+    <select id="selectMemberByUnionid" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        select  ISNULL(b.memberidto,b.member_id) as memberId,
+        ISNULL(b.real_name, b.member_name) as member_name,
+        ISNULL(b.integral, 0) integral
+        from [dbo].[qkjvip_member_jueru] a
+        inner join qkjvip_member b on a.crm_memberid=b.member_id
+        where
+        a.UnionId=#{params.unionid} and a.Disabled=0
+         and a.MemberChannel=18
+    </select>
+
+    <!--根据jueru memberid判断是否关注公众号：孙珊珊-->
+    <select id="selectMemberByJuruMemberid" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        select top 1 ISNULL(a.memberidto,a.member_id) as memberId,ISNULL(ISNULL(a.mobile,b.PhoneNo),b.ScanPhoneNo) as mobile,
+        ISNULL(a.real_name, a.member_name) as member_name,
+        case when (b.sex=3) then 1
+        else b.sex end as sex,
+        b.sex as oldsex,
+        ISNULL(a.head_img_url, b.HeadImgurl) headImgUrl
+        from [dbo].[qkjvip_member] a
+        inner join [dbo].[qkjvip_member_jueru] b on
+        (a.member_id=b.crm_memberid or a.memberidto=b.crm_memberid) and b.MemberChannel=18
+        where a.member_id=#{params.memberId}  and b.Disabled=0
+        <if test="params.isfollow != null and params.isfollow != ''"> <!-- isfollow不为空时查询是否是会员，否则查询客户信息-->
+            and a.statusflag!=1
+            and b.MemberChannel=200 and b.IsSubscribe=1
+        </if>
+    </select>
+
+    <select id="selectQkhMemberById" resultType="int">
+        select count(*) from qkjvip_member_jueru where MemberChannel=18 and Disabled=0 and crm_memberid=#{value}
+    </select>
+
+    <delete id="removeByIds">
+        UPDATE qkjvip_member SET statusflag = 1 WHERE member_id IN
+        <foreach item="memberId" collection="array" open="(" separator="," close=")">
+            #{memberId}
+        </foreach>
+    </delete>
+
+    <select id="queryMemByList" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT m.* FROM qkjvip_member m WHERE 1=1 and m.mobile IN
+        <foreach collection="list" item="item" index="index" open="(" separator="," close=")">
+            #{item.mobile}
+        </foreach>
+    </select>
+
+    <!--根据手机查信息，孙珊珊-->
+    <select id="queryAllByMobile" resultType="com.platform.modules.qkjvip.entity.MemberEntity">
+        SELECT top 1 isnull(m.real_name,m.member_name) member_name,m.member_id,
+        case when m.sex =0 or m.sex=3 or isnull(m.sex,0)=0 then 3
+        ELSE m.sex end as sex
+        FROM qkjvip_member m WHERE 1=1 and m.statusflag!=1
+        <if test="params.mobile != null and params.mobile != ''">
+            AND m.mobile = #{params.mobile}
+        </if>
+    </select>
+</mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipProductProductDao">
+
+    <sql id="selectSql">
+        SELECT top 50
+        T.ID,
+        T.PRODUCTNAME,
+        T.PRODUCTTYPE,
+        T.SALEPRICE,
+        T.SALEUNIT,
+        T.PACKSIZE,
+        T.SKUCODE,
+        T.DISABLED,
+        T.CREATETIME,
+        T.REMARK
+        FROM QKJVIP_PRODUCT_PRODUCT T
+        WHERE 1=1
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND T.productname LIKE '%${params.productname}%'
+        </if>
+        <if test="params.producttype != null">
+            AND T.ProductType = '${params.producttype}'
+        </if>
+        <if test="params.iserp != null">
+            AND T.IsErp = '${params.iserp}'
+        </if>
+        <if test="params.disabled != null">
+            AND T.disabled = '${params.disabled}'
+        </if>
+
+    </sql>
+
+    <select id="selectQkjvipProductProductPage" resultType="com.platform.modules.qkjvip.entity.QkjvipProductProductEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipProductProductEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

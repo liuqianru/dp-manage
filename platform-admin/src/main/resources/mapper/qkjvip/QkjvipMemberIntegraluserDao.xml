@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberIntegraluserDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        T.INTEGRAL_ID,
+        T.MEMBER_ID,
+        a.member_name,
+        a.real_name,
+        a.mobile
+        FROM QKJVIP_MEMBER_INTEGRALUSER T
+        join qkjvip_member a on (T.MEMBER_ID=a.member_id)
+        WHERE 1=1  --(a.statusflag = 0 OR a.statusflag = 2)
+        <if test="params.integralId != null and params.integralId.trim() != ''">
+            AND T.INTEGRAL_ID = #{params.integralId}
+        </if>
+        <if test="params.memberId != null and params.memberId.trim() != ''">
+            AND T.MEMBER_ID = #{params.memberId}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberIntegraluserPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberIntegraluserEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberIntegraluserEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryByIntegralId" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberMessageUserQueryEntity">
+        SELECT DISTINCT ISNULL(m1.memberidto, m1.member_id) as member_id, ISNULL(m2.openid, m1.openid) as openid, ISNULL(m2.mobile, m1.mobile) as mobile
+        FROM QKJVIP_MEMBER_INTEGRALUSER i  WITH(NOLOCK)
+        inner join qkjvip_member m1 WITH(NOLOCK) on i.member_id=m1.member_id
+        left join  qkjvip_member m2 WITH(NOLOCK) on m1.memberidto=m2.member_id
+        WHERE i.INTEGRAL_ID = #{value}
+        AND (( ISNULL(m1.memberidto,'null') != 'null' and (ISNULL(m2.MemberGroup, 'null') = 'null' or m2.MemberGroup=''))
+            or (ISNULL(m1.memberidto,'null') = 'null' and (ISNULL(m1.MemberGroup, 'null') = 'null' or m1.MemberGroup=''))
+            )
+    </select>
+
+    <select id="queryByIntegralId2" resultType="string">
+        SELECT MEMBER_ID FROM QKJVIP_MEMBER_INTEGRALUSER
+        WHERE INTEGRAL_ID = #{value}
+    </select>
+    
+    <delete id="deleteByIntegralId">
+        DELETE FROM QKJVIP_MEMBER_INTEGRALUSER
+        where INTEGRAL_ID = #{value}
+    </delete>
+
+    <delete id="deleteBatchByIntegralId">
+        DELETE FROM QKJVIP_MEMBER_INTEGRALUSER WHERE INTEGRAL_ID IN
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

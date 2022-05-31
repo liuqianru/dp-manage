@@ -1,0 +1,23 @@
+package com.platform.modules.util;
+import com.dingtalk.open.client.ServiceFactory;
+import com.dingtalk.open.client.api.model.corp.MessageSendResult;
+import com.dingtalk.open.client.api.service.corp.MessageService;
+
+public class MessageHelper {
+
+	public static class Receipt {
+		String invaliduser;
+		String invalidparty;
+	}
+	
+	public static Receipt send(String accessToken, LightAppMessageDelivery delivery)
+			throws Exception {
+		MessageService messageService = ServiceFactory.getInstance().getOpenService(MessageService.class);
+		MessageSendResult reulst = messageService.sendToCorpConversation(accessToken, delivery.touser,
+				delivery.toparty, delivery.agentid, delivery.msgType, delivery.message);
+		Receipt receipt = new Receipt();
+		receipt.invaliduser = reulst.getInvaliduser();
+		receipt.invalidparty = reulst.getInvalidparty();
+		return receipt;
+		}
+}

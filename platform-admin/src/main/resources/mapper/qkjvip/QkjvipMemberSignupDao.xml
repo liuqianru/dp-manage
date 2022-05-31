@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipMemberSignupDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,a.address addressstr
+        FROM QKJVIP_MEMBER_SIGNUP T
+        left join qkjvip_member_signupaddress a on (a.id=t.address)
+        left join [dbo].[qkjvip_member] b on T.memberid=b.member_id
+        WHERE 1=1
+        <if test="params.phone != null and params.phone.trim() != ''">
+            AND T.phone LIKE '${params.phone}'
+        </if>
+        <if test="params.acitvityId != null and params.acitvityId.trim() != ''">
+            AND T.acitvity_id = '${params.acitvityId}'
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberid}'
+            )
+        </if>
+        <if test="params.myopenid != null and params.myopenid.trim() != ''">
+            AND EXISTS (SELECT 1 from qkjvip_member a
+            where a.member_id=t.memberid and a.openid='${params.myopenid}')
+        </if>
+        <if test="params.userName != null and params.userName.trim() != ''">
+            AND T.user_name LIKE '%${params.userName}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjvipMemberSignupPage" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryTopOne" resultType="com.platform.modules.qkjvip.entity.QkjvipMemberSignupEntity">
+        SELECT top 1
+        T.*
+        FROM QKJVIP_MEMBER_SIGNUP T
+        left join [dbo].[qkjvip_member] b on T.memberid=b.member_id
+        WHERE 1=1
+        <if test="params.acitvityId != null and params.acitvityId.trim() != ''">
+            AND T.acitvity_id = '${params.acitvityId}'
+        </if>
+        <if test="params.memberid != null and params.memberid.trim() != ''">
+            AND
+            EXISTS(
+            select top 1 * from qkjvip_member c
+            where ISNULL(c.memberidto,c.member_id)=ISNULL(b.memberidto,b.member_id)
+            and c.member_id='${params.memberid}'
+            )
+        </if>
+        <if test="params.myopenid != null and params.myopenid.trim() != ''">
+            AND EXISTS (
+            SELECT 1 from qkjvip_member_jueru a
+            where a.crm_memberid = t.memberid and a.appopenid='${params.myopenid}'
+            )
+        </if>
+    </select>
+</mapper>

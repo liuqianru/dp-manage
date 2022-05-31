@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjm.dao.QkjmHProcessDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.UUID,
+        T.PROCESS_ID,
+        T.BIZ_ID,
+        T.BIZ_USER,
+        T.BIZ_TIME,
+        T.BIZ_NOTE,
+        T.BIZ_STATUS01,
+        T.BIZ_STATUS02,
+        T.BIZ_STATUS03,
+        T.BIZ_STATUS04,
+        T.BIZ_STATUS05,
+        T.BIZ_SIGN
+        FROM QKJM_H_PROCESS T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectQkjmHProcessPage" resultType="com.platform.modules.qkjm.entity.QkjmHProcessEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjm.entity.QkjmHProcessEntity">
+        <include refid="selectSql"/>
+    </select>
+</mapper>

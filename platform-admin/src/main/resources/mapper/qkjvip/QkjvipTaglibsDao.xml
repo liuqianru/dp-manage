@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipTaglibsDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM QKJVIP_TAGLIBS T
+        WHERE 1=1
+        <if test="params.tagName != null and params.tagName.trim() != ''">
+            AND T.TAG_NAME LIKE '%${params.tagName}%'
+        </if>
+        <if test="params.tagGroupId != null and params.tagGroupId.trim() != ''">
+            AND T.tag_group_id = #{params.tagGroupId}
+        </if>
+    </sql>
+
+    <select id="selectQkjvipTaglibsPage" resultType="com.platform.modules.qkjvip.entity.QkjvipTaglibsEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipTaglibsEntity">
+        <include refid="selectSql"/>
+        ORDER BY add_time ASC
+    </select>
+
+    <select id="queryToCheck" resultType="com.platform.modules.qkjvip.entity.QkjvipTaglibsEntity">
+        SELECT TOP 1 T.*, d.NAME tagGroupName, d.tag_type, d.optionType
+        FROM QKJVIP_TAGLIBS T
+        LEFT JOIN sys_dict d ON (T.tag_group_id = d.ID)
+        WHERE 1=1
+        <if test="params.tagName != null and params.tagName.trim() != ''">
+            AND T.TAG_NAME = #{params.tagName}
+        </if>
+        <if test="params.tagGroupId != null and params.tagGroupId.trim() != ''">
+            AND T.tag_group_id = #{params.tagGroupId}
+        </if>
+    </select>
+</mapper>

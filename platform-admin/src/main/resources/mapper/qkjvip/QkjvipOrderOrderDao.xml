@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderOrderDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*
+        FROM QKJVIP_ORDER_ORDER T
+        WHERE T.Disabled=0
+        <if test="params.shopname != null and params.shopname.trim() != ''">
+            AND T.shopname LIKE '%${params.shopname}%'
+        </if>
+        <if test="params.ordertype != null">
+            AND T.OrderType = #{params.ordertype}
+        </if>
+        <if test="params.startorderamount != null and params.startorderamount.trim() != ''">
+            AND T.PayAmount >= #{params.startorderamount}
+        </if>
+        <if test="params.endorderamount != null and params.endorderamount.trim() != ''">
+            AND T.PayAmount &lt;= #{params.endorderamount}
+        </if>
+        <if test="params.orderstatus != null">
+            AND T.OrderStatus = #{params.orderstatus}
+        </if>
+        <if test="params.ordercode != null and params.ordercode.trim() != ''">
+            AND T.OrderCode = #{params.ordercode}
+        </if>
+
+        <if test="params.cellphone != null and params.cellphone.trim() != ''">
+            AND T.CellPhone = #{params.cellphone}
+        </if>
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND T.MemberName = #{params.membername}
+        </if>
+        <if test="params.scenephone != null and params.scenephone.trim() != ''">
+            AND T.CellPhone = #{params.scenephone}
+        </if>
+        <if test="params.productid != null and params.productid.trim() != ''">
+            and T.OrderStatus != 60 and  T.OrderStatus != 10
+            and EXISTS (
+            SELECT 1 from qkjvip_order_orderdetail b where t.Id=b.MOrderId
+            and b.ProductId = #{params.productid} and b.Quantity > (
+            SELECT 	isnull(sum(1),0) from qkjvip_product_stock s where s.orderid=t.Id
+            and s.ProductId=#{params.productid}
+            )
+            )
+
+        </if>
+    </sql>
+
+<!--    and not EXISTS (-->
+<!--    SELECT 	1 from qkjvip_product_stock s where s.orderid=t.Id-->
+<!--    and s.ProductId=#{params.productid}-->
+
+<!--    )-->
+
+    <select id="selectQkjvipOrderOrderPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderOrderEntity">
+        <include refid="selectSql"/>
+    </select>
+    <select id="queryorderbyMember" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderOrderEntity">
+        SELECT * from (
+        SELECT top 1 a.ReceiveProvince,a.ReceiveCity,a.ReceiveCounty,a.ReceiveAddress,
+        a.receivephone,a.receiver,a.CreateTime addtime from qkjvip_order_order a where  a.ReceiveProvince!='' AND
+        a.ReceiveProvince is not null
+        <if test="params.crmMemberid != null and params.crmMemberid != ''">
+            AND EXISTS (
+            SELECT 1 from qkjvip_member b
+            where a.crm_memberid=b.member_id and
+            (b.member_id='${params.crmMemberid}' or b.memberidto='${params.crmMemberid}')
+            )
+        </if>
+        union all
+        SELECT top 1 a.ReceiveProvince,a.ReceiveCity,a.ReceiveCounty,a.ReceiveAddress,a.receivephone,a.receiver,a.add_time addtime
+        from qkjcus_order a where ISNULL(a.ReceiveProvince, '') !=''
+        <if test="params.crmMemberid != null and params.crmMemberid != ''">
+            and EXISTS
+            (
+            SELECT 1 from qkjvip_member b
+            where a.member_id=b.member_id and
+            (b.member_id='${params.crmMemberid}' or b.memberidto='${params.crmMemberid}')
+            )
+        </if>
+        ) a ORDER BY a.addtime DESC
+--         ORDER BY a.OrderDate DESC
+    </select>
+</mapper>

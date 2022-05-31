@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.sys.dao.SysUserChannelDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.ID,
+        T.USER_ID,
+        T.CHANNEL_ID
+        FROM SYS_USER_CHANNEL T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectSysUserChannelPage" resultType="com.platform.modules.sys.entity.SysUserChannelEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.sys.entity.SysUserChannelEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryChannelIdList" resultType="int">
+		SELECT CHANNEL_ID FROM SYS_USER_CHANNEL WHERE USER_ID = #{value}
+	</select>
+
+    <select id="queryPermissionChannels" resultType="com.platform.modules.sys.entity.SysUserChannelEntity">
+        <choose>
+            <when test="params.queryPermission != null and params.queryPermission != '' and params.queryPermission == 'all'">
+                SELECT c.AppId,c.ServiceName,c.MemberChannel channel_id FROM qkjvip_member_channel c
+                WHERE c.Disabled = 0
+                <if test="params.channelType != null and params.channelType != ''">
+                    AND c.ChannelType = #{params.channelType}
+                </if>
+                <if test="params.iscore != null">
+                    AND c.IsCore=1
+                </if>
+                <if test="params.userIdIsscore != null and params.userIdIsscore.trim() != ''">
+                    AND
+                    EXISTS (SELECT 1 from SYS_USER_CHANNEL l
+                    where l.CHANNEL_ID=c.MemberChannel
+                    and l.user_id = #{params.userIdIsscore})
+                </if>
+                order by c.MemberChannel desc
+            </when>
+            <otherwise>
+                SELECT T.*,c.AppId,c.ServiceName FROM SYS_USER_CHANNEL T
+                JOIN qkjvip_member_channel c ON (c.MemberChannel = T.CHANNEL_ID)
+                WHERE c.Disabled = 0
+                <if test="params.channelType != null and params.channelType != ''">
+                    AND c.ChannelType = #{params.channelType}
+                </if>
+                <if test="params.userId != null and params.userId.trim() != ''">
+                    AND T.user_id = #{params.userId}
+                </if>
+                order by c.MemberChannel desc
+            </otherwise>
+        </choose>
+	</select>
+</mapper>

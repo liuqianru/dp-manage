@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.cmnt.dao.CmntMgmtThumbsupDao">
+
+    <sql id="selectSql">
+        SELECT T.*
+        FROM CMNT_MGMT_THUMBSUP T
+        WHERE 1=1
+        <if test="params.name != null and params.name.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+    </sql>
+
+    <select id="selectCmntMgmtThumbsupPage" resultType="com.platform.modules.cmnt.entity.CmntMgmtThumbsupEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.cmnt.entity.CmntMgmtThumbsupEntity">
+        <include refid="selectSql"/>
+    </select>
+    <delete id="doDelete">
+        DELETE FROM CMNT_MGMT_THUMBSUP
+        WHERE mainId = #{mainid} AND commentId = #{commentid} AND openId = #{openid}
+    </delete>
+</mapper>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.platform.modules.qkjvip.dao.QkjvipOrderDeliverlogDao">
+
+    <sql id="selectSql">
+        SELECT
+        T.*,u.REAL_NAME addusername,isnull(m.real_name,m.member_name) membername
+        FROM QKJVIP_ORDER_DELIVERLOG T
+        left join sys_user u on (t.creator = u.USER_ID)
+        join qkjvip_order_order od on (od.Id=t.OrderId)
+        join qkjvip_member m on (od.crm_memberid=m.member_id)
+        WHERE ISNULL(t.warehouseid, '') != ''
+        <if test="params.productname != null and params.productname.trim() != ''">
+            AND T.NAME LIKE '%${params.name}%'
+        </if>
+        <if test="params.ordercode != null and params.ordercode.trim() != ''">
+            AND od.OrderCode = '${params.ordercode}'
+        </if>
+        <if test="params.orderid != null and params.orderid.trim() != ''">
+            AND t.orderid = '${params.orderid}'
+        </if>
+        <if test="params.membername != null and params.membername.trim() != ''">
+            AND od.MemberName like '%${params.membername}%'
+        </if>
+        <if test="params.mobile != null and params.mobile.trim() != ''">
+            AND od.CellPhone = '${params.mobile}'
+        </if>
+
+        <if test="params.warlists!=null">
+            AND EXISTS (SELECT 1 from qkjvip_order_warehouse wha where wha.id=t.warehouseid
+            and wha.roots in
+            <foreach collection="params.warlists" item="item"
+                     index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+            )
+        </if>
+
+    </sql>
+
+    <select id="selectQkjvipOrderDeliverlogPage" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderDeliverlogEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <select id="queryAll" resultType="com.platform.modules.qkjvip.entity.QkjvipOrderDeliverlogEntity">
+        <include refid="selectSql"/>
+    </select>
+
+    <delete id="deleteBatchByOrder">
+        DELETE FROM QKJVIP_ORDER_DELIVERLOG WHERE orderid = #{morderid}
+    </delete>
+</mapper>
